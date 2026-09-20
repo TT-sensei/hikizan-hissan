@@ -416,23 +416,31 @@ function generateProblem(levelId) {
   }
 
   if(level.kind==="three-two-zero-cross"){
+    // レベル3は3けた−2けた。
+    // 大半は十の位が0で、百の位→十の位の順にくり下げる。
+    // 一の位は「くり下がらない」問題も混ぜる。
+    const zeroCross=Math.random()<0.75;
     let a,b;
+
+    if(zeroCross){
+      do {
+        a=randomInt(100,999);
+        // 十の位を0にする。
+        a=Math.floor(a/100)*100+(a%10);
+        b=randomInt(10,99);
+      } while(
+        a<=b ||
+        Math.floor(a/10)%10!==0
+      );
+      return {a,b};
+    }
+
+    // 残りは、普通の3けた−2けた。
+    // ここでも一の位のくり下がり有無を混ぜる。
     do {
       a=randomInt(100,999);
       b=randomInt(10,99);
-    } while(
-      a<=b ||
-      // 大半は十の位が0で、百の位→十の位の順にくり下げる問題。
-      Math.floor(a/10)%10!==0 ||
-      // 一の位は「くり下がりなし」も混ぜる。
-      // ただし、十の位が0なので一の位でくり下がる場合は
-      // 百の位→十の位→一の位の順になる。
-      false
-    );
-
-    // レベル3は「一の位でもくり下がる」と「くり下がらない」を混ぜる。
-    // bの一の位 <= aの一の位なら、十の位からのくり下がりだけで済む。
-    // bの一の位 > aの一の位なら、さらに一の位へ10を渡す。
+    } while(a<=b);
     return {a,b};
   }
 
