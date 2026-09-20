@@ -424,14 +424,11 @@ function generateProblem(levelId) {
 
     if(zeroCross){
       do {
-        a=randomInt(100,999);
-        // 十の位を0にする。
-        a=Math.floor(a/100)*100+(a%10);
+        // 2年生までの学習範囲を意識し、百の位は1に固定。
+        // 十の位を0にして、百の位→十の位の順にくり下げる形を中心にする。
+        a=100+randomInt(0,9);
         b=randomInt(10,99);
-      } while(
-        a<=b ||
-        Math.floor(a/10)%10!==0
-      );
+      } while(a<=b);
       return {a,b};
     }
 
