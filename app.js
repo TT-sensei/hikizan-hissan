@@ -27,7 +27,7 @@ const HEROES = [
   { id:"tsuki", name:"つき", image:"tsuki-archer" },
   { id:"nami", name:"なみ", image:"nami-guardian-knight" }
 ];
-const GROUP1 = [
+const GROUP3 = [
   ["kinoko-apple-mushroom","りんごキノコ"],
   ["mofu-wolf-frost-pup","もふウルフ"],
   ["acorn-leafy","どんぐりリーフ"],
@@ -146,7 +146,7 @@ function showBattleSetup(){
   showScreen(homeScreen);
 }
 function chooseEnemyList(){
-  return [...GROUP1].sort(()=>Math.random()-.5);
+  return [...GROUP3].sort(()=>Math.random()-.5);
 }
 function setBattleBackground(){
   const background = BATTLE_BACKGROUNDS[Math.floor(Math.random() * BATTLE_BACKGROUNDS.length)];
@@ -162,7 +162,7 @@ function startBattleMode(){
   state.questionTotal=battleState.mode==="battle"?5:10;
   battleState.enemies=chooseEnemyList();
   if(battleState.mode==="time"){
-    while(battleState.enemies.length<10) battleState.enemies.push(GROUP1[battleState.enemies.length%GROUP1.length]);
+    while(battleState.enemies.length<10) battleState.enemies.push(GROUP3[battleState.enemies.length%GROUP3.length]);
   }
   battleState.enemyIndex=0;
   battleState.mistakes=0;
