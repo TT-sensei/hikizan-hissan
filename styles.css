@@ -702,3 +702,12 @@ button:focus-visible{outline:3px solid #7aa6cf;outline-offset:2px}
 /* くり下がり表示：参考版と同じ「元の数字に斜線＋借りた数」の見せ方 */
 .cell.carry{font-size:clamp(16px,calc(var(--cell)*.28),28px);align-items:flex-start;padding-top:4px;white-space:pre-line;line-height:1.05;color:#6b7280}
 .cell.operand.slashed::after{content:"";position:absolute;left:8%;right:8%;top:50%;border-top:3px solid #ef4444;transform:translateY(-50%) rotate(25deg);pointer-events:none}
+
+/* 3けたのくり下げ：動きで「どこから借りたか」を見える化 */
+.borrow-origin-choice .carry-choice-buttons{gap:12px}
+.borrow-origin-choice .carry-origin{min-width:150px;font-size:clamp(18px,3vw,24px);padding:14px 18px}
+.cell.borrow-step{animation:borrowStep .42s ease}
+.cell.operand.borrow-source{z-index:2}
+.cell.operand.borrow-source::after{animation:borrowSlash .42s ease}
+@keyframes borrowStep{0%{transform:scale(.86);opacity:.55;filter:brightness(1.15)}55%{transform:scale(1.16);opacity:1;filter:brightness(1.35)}100%{transform:scale(1);opacity:1;filter:none}}
+@keyframes borrowSlash{0%{transform:translateY(-50%) rotate(25deg) scaleX(0)}60%{transform:translateY(-50%) rotate(25deg) scaleX(1.15)}100%{transform:translateY(-50%) rotate(25deg) scaleX(1)}}
