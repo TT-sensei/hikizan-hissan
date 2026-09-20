@@ -4,9 +4,9 @@ const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
 const LEVELS = [
   { id:1, short:"LEVEL 1", name:"くり下がりなし", description:"2けた − 2けた\\nくり下がり なし", example:"54−23", kind:"two-no-borrow" },
-  { id:2, short:"LEVEL 2", name:"一のくらいでくり下がり", description:"2けた − 2けた\\nくり下がり 1回", example:"52−18", kind:"two-borrow-ones" },
-  { id:3, short:"LEVEL 3", name:"二回のくり下がり", description:"3けた − 3けた\\nくり下がり 2回", example:"624−357", kind:"three-borrow-twice" },
-  { id:4, short:"LEVEL 4", name:"3けたの筆算", description:"3けた − 3けた\\nくらいをそろえて計算", example:"432−178", kind:"three-digit" }
+  { id:2, short:"LEVEL 2", name:"くり下がり1回", description:"2けた − 2けた\\n0からのくり下がりはなし", example:"52−18", kind:"two-borrow-once" },
+  { id:3, short:"LEVEL 3", name:"3けた − 2けた", description:"3けた − 2けた\\n0からのくり下がりはなし", example:"102−18", kind:"three-two" },
+  { id:4, short:"LEVEL 4", name:"3けた − 3けた", description:"3けた − 3けた\\nくり下がりはランダム", example:"432−178", kind:"three-three-random" }
 ];
 
 const SESSION_SIZE = 10;
@@ -332,34 +332,46 @@ function randomInt(min, max) {
 function generateProblem(levelId) {
   const level=LEVELS.find(item=>item.id===levelId);
   if(!level) throw new Error("Unknown level");
+
   if(level.kind==="two-no-borrow"){
-    let a,b; do{a=randomInt(10,99);b=randomInt(10,a);}
-    while((a%10)<(b%10)||Math.floor(a/10)<Math.floor(b/10));
-    return {a,b};
-  }
-  if(level.kind==="two-borrow-ones"){
-    if(Math.random()<0.3){
-      let a,b; do{a=randomInt(10,99);b=randomInt(10,a);}
-      while((a%10)<(b%10)||Math.floor(a/10)<Math.floor(b/10));
-      return {a,b};
-    }
-    let a,b; do{a=randomInt(10,99);b=randomInt(10,a);}
-    while((a%10)>=(b%10)||Math.floor(a/10)<Math.floor(b/10));
-    return {a,b};
-  }
-  if(level.kind==="three-borrow-twice"){
     let a,b;
-    do{
-      a=randomInt(100,999); b=randomInt(100,a-1);
-    }while(
+    do { a=randomInt(10,99); b=randomInt(10,a); }
+    while((a%10)<(b%10) || Math.floor(a/10)<Math.floor(b/10));
+    return {a,b};
+  }
+
+  if(level.kind==="two-borrow-once"){
+    let a,b;
+    do { a=randomInt(10,99); b=randomInt(10,a); }
+    while(
       (a%10)>=(b%10) ||
-      (Math.floor(a/10)%10)-1 >= (Math.floor(b/10)%10) ||
-      Math.floor(a/100)<Math.floor(b/100)
+      Math.floor(a/10)<Math.floor(b/10)
     );
     return {a,b};
   }
-  let a,b; do{a=randomInt(100,999);b=randomInt(100,a);}
-  while(a-b<1);
+
+  if(level.kind==="three-two"){
+    let a,b;
+    do {
+      a=randomInt(100,999);
+      b=randomInt(10,99);
+    } while(
+      a<=b ||
+      // 0のくらいからのくり下がりは禁止。
+      ((a%10)===0 && (b%10)>0) ||
+      // 十のくらいが0のとき、百のくらいから十のくらいへの
+      // 連続的なくり下がりが必要になる問題も除外。
+      (Math.floor(a/10)%10===0 && Math.floor(b/10)%10>0)
+    );
+    return {a,b};
+  }
+
+  // 3けた−3けた。くり下がりの有無・回数をランダムにする。
+  let a,b;
+  do {
+    a=randomInt(100,999);
+    b=randomInt(100,a-1);
+  } while(a<=b);
   return {a,b};
 }
 
