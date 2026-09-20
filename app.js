@@ -627,7 +627,7 @@ function updateBoardVisuals() {
   }
 
   for (let col = modelStartCol(); col < state.problem.cols; col += 1) {
-    if (hasCompletedColumn(col)) getCell(2, col)?.classList.add("done");
+    if (hasCompletedColumn(col)) getCell(4, col)?.classList.add("done");
   }
 
   updateColumnGuide();
@@ -903,9 +903,9 @@ function markCurrentCellWrong() {
   const cells = [];
 
   if (step.kind === "borrow-check" || step.kind === "borrow-origin" || step.kind === "sum-input") {
-    cells.push(getCell(0, step.col), getCell(4, step.col), getCell(4, step.col), getCell(4, step.col));
+    cells.push(getCell(0, step.col), getCell(1, step.col), getCell(2, step.col), getCell(3, step.col), getCell(4, step.col));
     if (step.kind === "sum-input" && step.targetCol >= 0) {
-      cells.push(getCell(0, step.targetCol), getCell(4, step.targetCol));
+      cells.push(getCell(0, step.targetCol), getCell(1, step.targetCol), getCell(2, step.targetCol), getCell(3, step.targetCol), getCell(4, step.targetCol));
     }
   }
 
