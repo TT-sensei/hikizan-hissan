@@ -480,7 +480,11 @@ function buildSteps(model) {
           title: "どこから くり下げる？",
           text: "10をもらうのは、十のくらい？ 百のくらい？",
           expression,
-          answer: column.borrowInfo?.fromCol === col - 1 ? "tens" : "hundreds",
+          answer: (() => {
+            const fromCol = column.borrowInfo?.fromCol ?? -1;
+            const fromPlaceIndex = fromCol >= 0 ? model.cols - 1 - fromCol : -1;
+            return fromPlaceIndex === 1 ? "tens" : "hundreds";
+          })(),
           fromCol: column.borrowInfo?.fromCol ?? -1,
           borrowInfo: column.borrowInfo
         });
