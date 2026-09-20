@@ -1,4 +1,5 @@
 import { badgeSystem } from "./badges.js";
+import { soundList } from "https://tt-sensei.github.io/sounds-recipe-/sounds.js";
 const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
@@ -54,6 +55,30 @@ const GROUP3 = [
 ];
 const BATTLE_RECORD_KEY = "hikizanHissanBattle.v1";
 const BATTLE_SETUP_KEY = "hikizanHissanBattleSetup.v1";
+const SOUND_MUTE_KEY = "hikizan-hissan-sound-muted";
+let soundMuted = localStorage.getItem(SOUND_MUTE_KEY) === "1";
+let soundContext = null;
+
+function updateSoundButton(){
+  const button = $("#soundToggleButton");
+  if(!button) return;
+  button.textContent = soundMuted ? "🔇 音なし" : "🔊 音";
+  button.setAttribute("aria-pressed", String(soundMuted));
+}
+
+async function playSound(id, volume = 0.22){
+  if(soundMuted) return;
+  const recipe = soundList.find(item => item.id === id);
+  if(!recipe) return;
+  try{
+    soundContext ||= new (window.AudioContext || window.webkitAudioContext)();
+    if(soundContext.state === "suspended") await soundContext.resume();
+    recipe.play(soundContext, volume);
+  }catch(error){
+    console.warn("sound:", error);
+  }
+}
+
 const battleState = {
   // 初期値を持たせ、保存データや描画途中の不具合があっても開始条件を失わないようにする。
   mode:"battle", heroIndex:0, levelId:1, enemyIndex:0, enemies:[],
@@ -284,6 +309,7 @@ function finishBattle(won,title){
     ? "正解 "+battleState.correct+"問　ミス "+battleState.mistakes+"回"
     : "タイム "+formatBattleTime(elapsed)+"\n正解 "+battleState.correct+"問　ミス "+battleState.mistakes+"回"+(recordText?"\n"+recordText:"");
   $("#battleResultOverlay").hidden=false;
+  playSound(won ? "stageClear" : "gameover", 0.22);
 }
 function endBattleToHome(){
   clearInterval(battleState.timerId);
@@ -788,6 +814,8 @@ function renderKeypad() {
 }
 
 function setFeedback(message, type) {
+  if(type === "good") playSound("correct", 0.18);
+  if(type === "bad") playSound("wrong", 0.16);
   const feedback = $("#feedback");
   feedback.textContent = message;
   feedback.className = "feedback " + type;
@@ -859,6 +887,7 @@ function checkInput(){
   if(!step || step.kind!=="sum-input") return;
 
   if(state.input!==step.answer){
+    playSound("wrong", 0.16);
     registerBattleMistake();
     setFeedback("答えをもう一度計算してみよう。","bad");
     markCurrentCellWrong();
@@ -866,6 +895,7 @@ function checkInput(){
   }
 
   battlePlaceCorrect();
+  playSound("correct", 0.2);
   getCell(3,step.col).textContent=step.answer;
   setFeedback("正解。次のくらいへ進もう。","good");
   state.input="";
@@ -921,6 +951,18 @@ function completeProblem() {
 
   $("#questionProgress").textContent = (state.questionIndex + 1) + " / " + SESSION_SIZE;
   $("#sessionCorrect").textContent = "正解 " + state.sessionCorrect;
+}
+
+function initSoundUI(){
+  updateSoundButton();
+  const button = $("#soundToggleButton");
+  if(!button) return;
+  button.addEventListener("click", async () => {
+    soundMuted = !soundMuted;
+    localStorage.setItem(SOUND_MUTE_KEY, soundMuted ? "1" : "0");
+    updateSoundButton();
+    if(!soundMuted) await playSound("soundOn", 0.16);
+  });
 }
 
 function startLevel(levelId) {
@@ -1067,3 +1109,5 @@ $("#battleResultHome").addEventListener("click",endBattleToHome);
 
 badgeSystem.init();
 renderHome();
+
+initSoundUI();
