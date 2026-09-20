@@ -516,53 +516,28 @@ async function animateBorrow(info) {
     const operandCell = getCell(1, col);
     const carryCell = getCell(0, col);
 
-    // 「借りたあと」を同じ数字のまま見せない。
-    // まず元の数字を見せ、実際に1を減らしてから次の位へ進む。
-    if (operandCell) {
-      operandCell.textContent = String(meta.before);
-      operandCell.classList.add("borrow-step");
-    }
-
+    // 筆算の数字そのものは動かさない。
+    // 上の空いているマスに「借りたあとの数字」を書き足す。
     if (col === info.fromCol) {
-      // 例：102 の百の位 1 → 0
-      state.carryBottom[col] = "−1";
+      // もとの数字は残したまま、上に変化後の数字を書く。
+      state.carryTop[col] = String(meta.after);
       renderBorrowAt(col);
       carryCell?.classList.add("borrow-step");
       await wait(260);
-
-      if (operandCell) {
-        operandCell.textContent = String(meta.after);
-        operandCell.classList.add("borrow-source", "slashed");
-      }
-    } else if (col === ordered[ordered.length - 1]) {
-      // 例：2 → 12。12を筆算の数字そのものとして表示する。
-      state.carryTop[col] = "+10";
-      renderBorrowAt(col);
-      carryCell?.classList.add("borrow-step");
-      await wait(180);
-
-      if (operandCell) operandCell.textContent = String(meta.after);
     } else {
-      // 0をまたぐ場合は、10を受け取ったあと1を減らして9にする。
+      // 10を受け取る → 1を渡す、という変化を上のマスだけで見せる。
       state.carryTop[col] = "+10";
       renderBorrowAt(col);
       carryCell?.classList.add("borrow-step");
       await wait(180);
 
-      state.carryBottom[col] = String(meta.after);
+      state.carryTop[col] = String(meta.after);
       renderBorrowAt(col);
-      if (operandCell) operandCell.textContent = String(meta.after);
+      await wait(220);
     }
 
-    await wait(220);
     carryCell?.classList.remove("borrow-step");
     operandCell?.classList.remove("borrow-step");
-
-    // 最後に「借りたあとの数字」を赤字で上に残す。
-    // これで、元の数字→減った数字の変化があとから見ても分かる。
-    state.carryTop[col] = String(meta.after);
-    state.carryBottom[col] = "";
-    renderBorrowAt(col);
   }
 }
 
