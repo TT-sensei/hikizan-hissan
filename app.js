@@ -516,23 +516,16 @@ async function animateBorrow(info) {
     const operandCell = getCell(1, col);
     const carryCell = getCell(0, col);
 
-    // 元の筆算の数字は変えない。上の空いたマスに、くり下げた数字を書く。
-    // くり下げ元には、手書きの筆算に近いななめ線を戻す。
+    // 元の筆算の数字は変えない。上の空いたマスに、くり下げた後の数字を書く。
     if (col === info.fromCol) {
-      state.carryTop[col] = "10";
+      state.carryTop[col] = String(meta.after);
       renderBorrowAt(col);
       operandCell?.classList.add("borrow-source", "slashed");
       carryCell?.classList.add("borrow-step");
       await wait(260);
-    } else if (col === ordered[ordered.length - 1]) {
-      // 10をもらった1の位は 10 + もとの数字。
-      state.carryTop[col] = String(meta.after);
-      renderBorrowAt(col);
-      carryCell?.classList.add("borrow-step");
-      await wait(220);
     } else {
-      // 0などの途中の位も、上段は「10」のまま見せる。
-      state.carryTop[col] = "10";
+      // 途中の位は、10を受け取ったあと1を渡した結果を上段に残す。
+      state.carryTop[col] = String(meta.after);
       renderBorrowAt(col);
       carryCell?.classList.add("borrow-step");
       await wait(220);
