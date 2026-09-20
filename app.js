@@ -538,17 +538,26 @@ async function animateBorrow(info) {
       await wait(260);
     } else if (col === lastCol) {
       // 元の数字のすぐ上に10を書く。
-      // 256 → 6のすぐ上に10。102 → 2のすぐ上に10。
-      state.carryTop[col] = "";
-      state.carryBottom[col] = "10";
+      // すでに下段に「10」がある場合は上書きせず、そのさらに上に10を書く。
+      // たとえば一の位ですでに10をもらっている十の位に、
+      // 百の位からさらに10をもらうときは「10」を上の段に残す。
+      if (state.carryBottom[col]) {
+        state.carryTop[col] = "10";
+      } else {
+        state.carryBottom[col] = "10";
+      }
       renderBorrowAt(col);
       await wait(220);
     } else {
       // 0をまたぐとき：
       // 0のすぐ上に10、そのさらに上に9を残す。
-      // 102 → 0の上に10、その上に9。
-      state.carryTop[col] = String(meta.after);
-      state.carryBottom[col] = "10";
+      // すでに書き込みがある場合は上書きしない。
+      if (state.carryBottom[col]) {
+        state.carryTop[col] = String(meta.after);
+      } else {
+        state.carryTop[col] = String(meta.after);
+        state.carryBottom[col] = "10";
+      }
       renderBorrowAt(col);
       await wait(260);
     }
