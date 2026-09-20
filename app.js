@@ -481,6 +481,7 @@ async function animateBorrow(info) {
   if (!info) return;
 
   const ordered = [...info.changedCols].sort((a,b) => a-b);
+  const wait = ms => new Promise(resolve => window.setTimeout(resolve, ms));
 
   for (const col of ordered) {
     const meta = info.meta[col];
@@ -489,30 +490,52 @@ async function animateBorrow(info) {
     const operandCell = getCell(1, col);
     const carryCell = getCell(0, col);
 
+    // 「借りたあと」を同じ数字のまま見せない。
+    // まず元の数字を見せ、実際に1を減らしてから次の位へ進む。
+    if (operandCell) {
+      operandCell.textContent = String(meta.before);
+      operandCell.classList.add("borrow-step");
+    }
+
     if (col === info.fromCol) {
-      state.carryBottom[col] = String(meta.after);
+      // 例：102 の百の位 1 → 0
+      state.carryBottom[col] = "−1";
+      renderBorrowAt(col);
+      carryCell?.classList.add("borrow-step");
+      await wait(260);
+
       if (operandCell) {
-        operandCell.classList.add("borrow-source");
-        operandCell.classList.add("slashed");
         operandCell.textContent = String(meta.after);
+        operandCell.classList.add("borrow-source", "slashed");
       }
     } else if (col === ordered[ordered.length - 1]) {
-      state.carryTop[col] = String(meta.after);
+      // 例：2 → 12。12を筆算の数字そのものとして表示する。
+      state.carryTop[col] = "+10";
+      renderBorrowAt(col);
+      carryCell?.classList.add("borrow-step");
+      await wait(180);
+
       if (operandCell) operandCell.textContent = String(meta.after);
     } else {
-      state.carryTop[col] = String(meta.before + 10);
+      // 0をまたぐ場合は、10を受け取ったあと1を減らして9にする。
+      state.carryTop[col] = "+10";
+      renderBorrowAt(col);
+      carryCell?.classList.add("borrow-step");
+      await wait(180);
+
       state.carryBottom[col] = String(meta.after);
+      renderBorrowAt(col);
       if (operandCell) operandCell.textContent = String(meta.after);
     }
 
-    renderBorrowAt(col);
-    carryCell?.classList.add("borrow-step");
-    operandCell?.classList.add("borrow-step");
-
-    await new Promise(resolve => window.setTimeout(resolve, 380));
-
+    await wait(220);
     carryCell?.classList.remove("borrow-step");
     operandCell?.classList.remove("borrow-step");
+
+    // 借りるための一時表示は消し、変更後の数字だけを残す。
+    state.carryTop[col] = "";
+    state.carryBottom[col] = "";
+    renderBorrowAt(col);
   }
 }
 
