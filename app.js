@@ -478,7 +478,7 @@ function buildSteps(model) {
           kind: "borrow-origin",
           col,
           title: "どこから くり下げる？",
-          text: "10をもらうのは、十の位？ 百の位？",
+          text: "10をもらうのは、十のくらい？ 百のくらい？",
           expression,
           answer: column.borrowInfo?.fromCol === col - 1 ? "tens" : "hundreds",
           fromCol: column.borrowInfo?.fromCol ?? -1,
@@ -574,7 +574,7 @@ function renderBoard(model) {
   createRow("result", 4);
 
   const aText=String(model.a), bText=String(model.b);
-  for(let i=0;i<aText.length;i++) getCell(4,model.cols-aText.length+i).textContent=aText[i];
+  for(let i=0;i<aText.length;i++) getCell(2,model.cols-aText.length+i).textContent=aText[i];
   for(let i=0;i<bText.length;i++) getCell(3,model.cols-bText.length+i).textContent=bText[i];
 
   const minusCol=model.cols-bText.length-1;
@@ -731,16 +731,16 @@ function renderCurrentStep() {
     $("#answerDisplay").textContent = "✓";
     $("#answerDisplay").style.borderColor = "#67b78d";
     $("#answerDisplay").style.background = "#effaf4";
-  } else if (step.kind === "borrow-check" || step.kind === "borrow-origin") {
-    $("#answerLabel").textContent = "くり下がりを選ぶ";
-    prompt.textContent = step.expression;
-    $("#answerDisplay").textContent = "する？ しない？";
-    $("#answerDisplay").style.borderColor = "";
-    $("#answerDisplay").style.background = "";
   } else if (step.kind === "borrow-origin") {
     $("#answerLabel").textContent = "くり下げる位を選ぶ";
     prompt.textContent = step.expression;
-    $("#answerDisplay").textContent = "十の位？ 百の位？";
+    $("#answerDisplay").textContent = "十のくらい？ 百のくらい？";
+    $("#answerDisplay").style.borderColor = "";
+    $("#answerDisplay").style.background = "";
+  } else if (step.kind === "borrow-check") {
+    $("#answerLabel").textContent = "くり下がりを選ぶ";
+    prompt.textContent = step.expression;
+    $("#answerDisplay").textContent = "する？ しない？";
     $("#answerDisplay").style.borderColor = "";
     $("#answerDisplay").style.background = "";
   } else {
@@ -784,8 +784,8 @@ function renderKeypad() {
       '<div class="carry-choice-wrap borrow-origin-choice">' +
         '<p class="carry-choice-label">どこから くり下げる？</p>' +
         '<div class="carry-choice-buttons">' +
-          '<button type="button" class="choice-button carry-origin" data-choice="tens">十の位</button>' +
-          '<button type="button" class="choice-button carry-origin" data-choice="hundreds">百の位</button>' +
+          '<button type="button" class="choice-button carry-origin" data-choice="tens">十のくらい</button>' +
+          '<button type="button" class="choice-button carry-origin" data-choice="hundreds">百のくらい</button>' +
         '</div>' +
       '</div>';
     return;
