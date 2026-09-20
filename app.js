@@ -518,8 +518,11 @@ async function animateBorrow(info) {
     const carryCell = getCell(0, col);
 
     // 元の数字は変えず、上の空いたマスに「くり下がりの書き込み」を残す。
-    // くり下げた元の数字には、手書きと同じようにななめ線を入れる。
-    operandCell?.classList.add("borrow-source", "slashed");
+    // 斜線を入れるのは「10を渡した数字」だけ。
+    // 一の位など、10を受け取った数字には斜線を入れない。
+    if (col === info.fromCol) {
+      operandCell?.classList.add("borrow-source", "slashed");
+    }
     carryCell?.classList.add("borrow-step");
 
     if (col === info.fromCol) {
