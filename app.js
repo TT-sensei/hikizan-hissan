@@ -6,8 +6,8 @@ const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const LEVELS = [
   { id:1, short:"LEVEL 1", name:"くり下がりなし", description:"2けた − 2けた\\nくり下がり なし", example:"54−23", kind:"two-no-borrow" },
   { id:2, short:"LEVEL 2", name:"くり下がり1回", description:"2けた − 2けた\\n0からのくり下がりはなし", example:"52−18", kind:"two-borrow-once" },
-  { id:3, short:"LEVEL 3", name:"3けた − 2けた", description:"3けた − 2けた\\n0をまたぐくり下がりも考える", example:"102−18", kind:"three-two" },
-  { id:4, short:"LEVEL 4", name:"3けた − 3けた", description:"3けた − 3けた\\nくり下がりはランダム", example:"432−178", kind:"three-three-random" }
+  { id:3, short:"LEVEL 3", name:"3けた − 2けた", description:"3けた − 2けた\\n0をまたぐくり下がりを中心に", example:"102−18", kind:"three-two-zero-cross" },
+  { id:4, short:"LEVEL 4", name:"3けた − 2けた", description:"3けた − 2けた\\nいろいろなくり下がり", example:"432−78", kind:"three-two-mixed" }
 ];
 
 const SESSION_SIZE = 10;
@@ -387,42 +387,67 @@ function generateProblem(levelId) {
   const level=LEVELS.find(item=>item.id===levelId);
   if(!level) throw new Error("Unknown level");
 
+  // 上のレベルでも、これまでに学んだ型をときどき復習する。
+  // 新しい型を主役にしつつ、以前の問題を少し混ぜる。
+  const roll=Math.random();
+  if(levelId>=2 && roll<0.12) return generateProblem(1);
+  if(levelId>=3 && roll>=0.12 && roll<0.22) return generateProblem(2);
+  if(levelId>=4 && roll>=0.22 && roll<0.30) return generateProblem(3);
+
   if(level.kind==="two-no-borrow"){
     let a,b;
-    do { a=randomInt(10,99); b=randomInt(10,a); }
-    while((a%10)<(b%10) || Math.floor(a/10)<Math.floor(b/10));
+    do {
+      a=randomInt(10,99);
+      b=randomInt(10,a);
+    } while((a%10)<(b%10));
     return {a,b};
   }
 
   if(level.kind==="two-borrow-once"){
     let a,b;
-    do { a=randomInt(10,99); b=randomInt(10,a); }
-    while(
+    do {
+      a=randomInt(10,99);
+      b=randomInt(10,a);
+    } while(
       (a%10)>=(b%10) ||
       Math.floor(a/10)<Math.floor(b/10)
     );
     return {a,b};
   }
 
-    if(level.kind==="three-two"){
+  if(level.kind==="three-two-zero-cross"){
     let a,b;
     do {
       a=randomInt(100,999);
       b=randomInt(10,99);
     } while(
       a<=b ||
-      (a%10)>=(b%10)
+      // 大半は十の位が0で、百の位→十の位の順にくり下げる問題。
+      Math.floor(a/10)%10!==0 ||
+      // 一の位は「くり下がりなし」も混ぜる。
+      // ただし、十の位が0なので一の位でくり下がる場合は
+      // 百の位→十の位→一の位の順になる。
+      false
     );
+
+    // レベル3は「一の位でもくり下がる」と「くり下がらない」を混ぜる。
+    // bの一の位 <= aの一の位なら、十の位からのくり下がりだけで済む。
+    // bの一の位 > aの一の位なら、さらに一の位へ10を渡す。
     return {a,b};
   }
 
-  // 3けた−3けた。くり下がりの有無・回数をランダムにする。
-  let a,b;
-  do {
-    a=randomInt(100,999);
-    b=randomInt(100,a-1);
-  } while(a<=b);
-  return {a,b};
+  if(level.kind==="three-two-mixed"){
+    // レベル4は3けた−2けたを広く扱う。
+    // くり下がりなし、1回、0をまたぐくり下がりなどを混ぜる。
+    let a,b;
+    do {
+      a=randomInt(100,999);
+      b=randomInt(10,99);
+    } while(a<=b);
+    return {a,b};
+  }
+
+  throw new Error("Unknown level kind");
 }
 
 function createProblemModel(a,b) {
