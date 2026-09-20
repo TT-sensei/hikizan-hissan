@@ -558,8 +558,9 @@ async function animateBorrow(info) {
     carryCell?.classList.remove("borrow-step");
     operandCell?.classList.remove("borrow-step");
 
-    // 借りるための一時表示は消し、変更後の数字だけを残す。
-    state.carryTop[col] = "";
+    // 最後に「借りたあとの数字」を赤字で上に残す。
+    // これで、元の数字→減った数字の変化があとから見ても分かる。
+    state.carryTop[col] = String(meta.after);
     state.carryBottom[col] = "";
     renderBorrowAt(col);
   }
