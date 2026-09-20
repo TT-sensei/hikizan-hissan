@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f3f6f9">
+  <title>たし算の筆算｜学ぶ・できる</title>
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <main id="homeScreen" class="screen active">
+<div class="battle-setup-shell">
+      <h1 class="battle-main-title">たし算ひっ算バトル</h1>
+      <p class="battle-main-lead">えらんだナビキャラといっしょに、筆算でナビアンをたおそう。</p>
+      <div id="modeChoice" class="mode-choice">
+        <button type="button" class="mode-card" data-mode="battle">
+          <span class="mode-title">ノーマル</span>
+          <strong>5問・5体</strong>
+          <small>ミス5回でゲームオーバー</small>
+        </button>
+        <button type="button" class="mode-card" data-mode="time">
+          <span class="mode-title">タイムアタック</span>
+          <strong>10問</strong>
+          <small>時間と正解数に挑戦</small>
+        </button>
+      </div>
+      <div class="character-select-heading">
+        <span>筆算レベル</span>
+        <span id="selectedBattleLevelLabel">えらんでね</span>
+      </div>
+      <div id="battleLevelChoice" class="battle-level-choice"></div>
+
+      <div class="character-select-heading">
+        <span>ナビキャラ</span>
+        <span id="selectedHeroLabel">えらんでね</span>
+      </div>
+      <div id="characterSelectGrid" class="character-select-grid"></div>
+      <div class="battle-setup-actions">
+        <button id="battleStartButton" class="primary-button" type="button" disabled>バトルをはじめる</button>
+        <button id="badgeCollectionButton" class="secondary-button badge-entry-button" type="button">
+          <span>バッジ・コレクション</span>
+          <small><strong id="badgeCollectionHomeCount">0 / 85</strong> 集めよう</small>
+        </button>
+        </div>
+    </div>
+  </main>
+
+  <main id="gameScreen" class="screen">
+    <header class="game-topbar">
+      <button id="homeButton" class="ghost-button" type="button">← もどる</button>
+      <div class="game-title-wrap">
+        <span id="gameLevelLabel" class="level-badge"></span>
+        <h1 id="gameTitle">たし算の筆算</h1>
+      </div>
+      <div class="game-progress">
+        <span id="battleModeLabel">筆算</span>
+        <span id="questionProgress">1 / 10</span>
+        <span id="sessionCorrect">正解 0</span>
+      </div>
+    </header>
+
+    <div id="battleHud" class="battle-hud" hidden>
+      <div class="battle-center-hud">
+        <div class="battle-status" id="battleStatus">ナビアンがあらわれた！</div>
+      </div>
+      <div class="battle-timer" id="battleTimer" aria-live="polite"></div>
+    </div>
+
+    <div class="battle-field-banner" id="battleFieldBanner" hidden>
+      <span id="battleAttackMessage">こうげき！</span>
+    </div>
+
+    <div class="game-layout battle-game-layout">
+      <aside class="battle-side battle-side-left">
+        <img id="heroBattleImage" alt="">
+        <strong id="heroBattleName"></strong>
+        <div class="battle-hearts battle-side-hearts" id="battleHearts" aria-label="のこりミス回数">♥ ♥ ♥ ♥ ♥</div>
+      </aside>
+
+      <section class="work-area" aria-label="筆算">
+        <div class="problem-card">
+          <div class="problem-meta">
+            <span id="problemLabel">問題</span>
+            <span id="problemExpression" class="problem-expression"></span>
+          </div>
+
+          <div id="boardWrap" class="board-wrap">
+            <div id="board" class="board" role="grid" aria-label="筆算のます"></div>
+            <div class="column-guide" aria-hidden="true"></div>
+          </div>
+
+          <div class="work-actions">
+            <button id="retryButton" class="secondary-button" type="button">この問題をやりなおす</button>
+            <button id="hintButton" class="secondary-button" type="button">ヒント</button>
+          </div>
+        </div>
+      </section>
+
+      <aside class="battle-side battle-side-right">
+        <img id="enemyBattleImage" alt="">
+        <strong id="enemyBattleName"></strong>
+        <div class="enemy-hp battle-side-hp"><span id="enemyHpFill"></span></div>
+        <div id="battlePlaceProgress" class="battle-place-progress">あと 2 くらい</div>
+      </aside>
+
+      <aside class="learning-panel" aria-label="学習パネル">
+        <div class="step-rail" id="stepRail">
+          <span class="step-pill active">① たす</span>
+          <span class="step-pill">② くり上がり？</span>
+          <span class="step-pill">③ 答えを書く</span>
+        </div>
+        <div class="instruction-card">
+          <p class="instruction-kicker">いま すること</p>
+          <h2 id="instructionTitle">右からたそう</h2>
+          <p id="instructionText" class="instruction-text">一のくらいの数字をたします。</p>
+          <div id="calculationPrompt" class="calculation-prompt"></div>
+          <div id="feedback" class="feedback" aria-live="polite"></div>
+        </div>
+        <div class="answer-area">
+          <div id="answerLabel" class="answer-label">こたえを入力</div>
+          <div id="answerDisplay" class="answer-display" aria-live="polite">＿</div>
+          <div id="numberPad" class="number-pad" aria-label="数字キーパッド"></div>
+        </div>
+      </aside>
+    </div>
+
+    <div id="hintBox" class="hint-box" hidden></div>
+  </main>
+
+  <main id="badgeScreen" class="screen">
+    <div class="badge-collection-card badge-page-card">
+      <div class="badge-collection-head">
+        <div>
+          <p class="complete-kicker">COLLECTION</p>
+          <h2>バッジ・コレクション</h2>
+          <p>がんばった記録が、少しずつコレクションになるよ。</p>
+        </div>
+        <button id="badgeCollectionClose" class="secondary-button" type="button">← もどる</button>
+      </div>
+      <div class="badge-collection-toolbar">
+        <span>集めた数 <strong id="badgeCollectionCount">0 / 85</strong></span>
+        <select id="badgeCategoryFilter" aria-label="バッジの種類">
+          <option value="all">すべて</option>
+          <option value="算数">算数</option>
+          <option value="共通">共通</option>
+          <option value="ファンタジー">ファンタジー</option>
+        </select>
+      </div>
+      <div id="badgeCollectionGrid" class="badge-collection-grid"></div>
+    </div>
+  </main>
+
+  <div id="badgeToast" class="badge-toast" hidden></div>
+
+    <div id="battleResultOverlay" class="overlay" hidden>
+      <div class="complete-card battle-result-card">
+        <div id="battleResultMark" class="complete-mark">✓</div>
+        <p id="battleResultKicker" class="complete-kicker">バトル</p>
+        <h2 id="battleResultTitle">クリア！</h2>
+        <p id="battleResultText"></p>
+        <div class="complete-actions">
+          <button id="battleResultAgain" class="primary-button" type="button">もう一度</button>
+          <button id="battleResultHome" class="secondary-button" type="button">ホームへ</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="completeOverlay" class="overlay" hidden>
+      <div class="complete-card">
+        <div class="complete-mark">✓</div>
+        <p class="complete-kicker">できた</p>
+        <h2 id="completeTitle">筆算ができました</h2>
+        <p id="completeText"></p>
+        <div class="complete-actions">
+          <button id="nextButton" class="primary-button" type="button">つぎの問題</button>
+          <button id="finishButton" class="secondary-button" type="button">レベルにもどる</button>
+        </div>
+      </div>
+    </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
