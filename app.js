@@ -402,7 +402,7 @@ function buildSteps(model) {
     const top=data.borrowIn>0?String(data.adjustedTop):String(data.aDigit);
     const expression=top+"−"+String(data.bDigit);
     if(alwaysCheckBorrow){
-      steps.push({kind:"borrow-check",col,title:place+"の くり下がりは？",text:"上の数字からそのまま引けるか考えよう。",expression,answer:data.borrowOut>0?"yes":"no"});
+      steps.push({kind:"borrow-check",col,title:place+"の くり下がりは する？ しない？",text:"上の数字からそのまま引けるか考えよう。",expression,answer:data.borrowOut>0?"yes":"no"});
     }
     steps.push({
       kind:"sum-input",col,title:place+"の答えを書く",
@@ -559,7 +559,7 @@ function updateStepRail() {
   }
 
   pills[0].textContent = "① 計算する";
-  pills[1].textContent = "② くり下がり？";
+  pills[1].textContent = "② くり下がりはする？";
   pills[2].textContent = "③ 答えを書く";
 
   if (current.kind === "borrow-check") {
@@ -599,7 +599,7 @@ function renderCurrentStep() {
   } else if (step.kind === "borrow-check") {
     $("#answerLabel").textContent = "くり下がりを選ぶ";
     prompt.textContent = step.expression;
-    $("#answerDisplay").textContent = "ある？ なし？";
+    $("#answerDisplay").textContent = "する？ しない？";
     $("#answerDisplay").style.borderColor = "";
     $("#answerDisplay").style.background = "";
   } else {
@@ -629,10 +629,10 @@ function renderKeypad() {
   if (step.kind === "borrow-check") {
     pad.innerHTML =
       '<div class="carry-choice-wrap">' +
-        '<p class="carry-choice-label">くり下がりはある？ なし？</p>' +
+        '<p class="carry-choice-label">くり下がりはする？ しない？</p>' +
         '<div class="carry-choice-buttons">' +
-          '<button type="button" class="choice-button carry-yes" data-choice="yes">ある</button>' +
-          '<button type="button" class="choice-button carry-no" data-choice="no">なし</button>' +
+          '<button type="button" class="choice-button carry-yes" data-choice="yes">する</button>' +
+          '<button type="button" class="choice-button carry-no" data-choice="no">しない</button>' +
         '</div>' +
       '</div>';
     return;
@@ -691,9 +691,9 @@ function handleBorrowChoice(choice) {
     }
     const currentCell=getCell(1,step.col);
     if(currentCell) currentCell.textContent=String(data.aDigit+10);
-    setFeedback("くり下がりあり。10をもらってから引こう。","good");
+    setFeedback("くり下がりをする。10をもらってから引こう。","good");
   }else{
-    setFeedback("くり下がりなし。答えを入力しよう。","good");
+    setFeedback("くり下がりはしない。答えを入力しよう。","good");
   }
   state.stepIndex++;
   state.input="";
