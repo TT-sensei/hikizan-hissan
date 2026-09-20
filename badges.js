@@ -85,27 +85,33 @@ const COMMON_BADGES = COMMON_CONDITIONS.map(([id,title,desc,condition])=>({
   title, desc, type:"common", condition
 }));
 
-const FANTASY_ITEMS = [
-  ["common","dragon","ドラゴン","20問正解"],
-  ["common","fairy","フェアリー","30問正解"],
-  ["common","golem","ゴーレム","40問正解"],
-  ["common","griffin","グリフォン","50問正解"],
-  ["common","phoenix","フェニックス","60問正解"],
-  ["common","slime","スライム","70問正解"],
-  ["common","unicorn","ユニコーン","80問正解"],
-  ["common","wizard-cat","ウィザードキャット","90問正解"],
-  ["rare","kitsune-spirit","キツネの精霊","100問正解"],
-  ["rare","mermaid","マーメイド","110問正解"],
-  ["rare","pegasus","ペガサス","120問正解"],
-  ["rare","treasure-mimic","トレジャーミミック","130問正解"],
-  ["secret","ancient-guardian","古代の守護者","140問正解"],
-  ["super-rare","celestial-dragon","セレスティアルドラゴン","150問正解"],
-  ["super-rare","moon-unicorn","ムーンユニコーン","160問正解"]
+const DINOSAUR_ITEMS = [
+  ["common","tyrannosaurus","ティラノサウルス","20問正解"],
+  ["common","triceratops","トリケラトプス","30問正解"],
+  ["common","stegosaurus","ステゴサウルス","40問正解"],
+  ["common","velociraptor","ヴェロキラプトル","50問正解"],
+  ["common","brachiosaurus","ブラキオサウルス","60問正解"],
+  ["common","ankylosaurus","アンキロサウルス","70問正解"],
+  ["common","spinosaurus","スピノサウルス","80問正解"],
+  ["common","parasaurolophus","パラサウロロフス","90問正解"],
+  ["rare","pachycephalosaurus","パキケファロサウルス","100問正解"],
+  ["rare","iguanodon","イグアノドン","110問正解"],
+  ["rare","dilophosaurus","ディロフォサウルス","120問正解"],
+  ["rare","carnotaurus","カルノタウルス","130問正解"],
+  ["secret","fossil-guardian","化石の守護者","140問正解"],
+  ["super-rare","giganotosaurus","ギガノトサウルス","150問正解"],
+  ["super-rare","ultimate-dinosaur","究極の恐竜","160問正解"]
 ];
-const FANTASY_BADGES = FANTASY_ITEMS.map(([rarity,id,title,desc],i)=>({
-  id:"fantasy-"+id, category:"ファンタジー", rarity,
+const DINOSAUR_BADGES = DINOSAUR_ITEMS.map(([rarity,id,title,desc],i)=>({
+  id:"dinosaur-"+id, category:"ダイナソー", rarity,
   asset:FANTASY_BASE+rarity+"/"+id+"/badge.png", title, desc,
-  type:"fantasy", threshold:20+(i*10), stat:"totalCorrect"
+  type:"dinosaur", threshold:20+(i*10), stat:"totalCorrect"
+}));
+
+const FANTASY_BADGES = DINOSAUR_ITEMS.map(([rarity,id,title,desc],i)=>({
+  id:"dinosaur-"+id, category:"ダイナソー", rarity,
+  asset:FANTASY_BASE+rarity+"/"+id+"/badge.png", title, desc,
+  type:"dinosaur", threshold:20+(i*10), stat:"totalCorrect"
 }));
 
 const BADGES = [...MATH_BADGES,...COMMON_BADGES,...FANTASY_BADGES];
