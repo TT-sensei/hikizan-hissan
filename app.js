@@ -5,8 +5,8 @@ const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const LEVELS = [
   { id:1, short:"LEVEL 1", name:"くり下がりなし", description:"2けた − 2けた\\nくり下がり なし", example:"54−23", kind:"two-no-borrow" },
   { id:2, short:"LEVEL 2", name:"一のくらいでくり下がり", description:"2けた − 2けた\\nくり下がり 1回", example:"52−18", kind:"two-borrow-ones" },
-  { id:3, short:"LEVEL 3", name:"二回のくり下がり", description:"2けた − 2けた\\nくり下がり 2回", example:"82−47", kind:"two-borrow-twice" },
-  { id:4, short:"LEVEL 4", name:"3けたの筆算", description:"3けた − 2〜3けた\\nくらいをそろえて計算", example:"432−178", kind:"three-digit" }
+  { id:3, short:"LEVEL 3", name:"二回のくり下がり", description:"3けた − 3けた\\nくり下がり 2回", example:"624−357", kind:"three-borrow-twice" },
+  { id:4, short:"LEVEL 4", name:"3けたの筆算", description:"3けた − 3けた\\nくらいをそろえて計算", example:"432−178", kind:"three-digit" }
 ];
 
 const SESSION_SIZE = 10;
@@ -330,34 +330,37 @@ function randomInt(min, max) {
 }
 
 function generateProblem(levelId) {
-  const level = LEVELS.find(item => item.id === levelId);
-  if (!level) throw new Error("Unknown level");
-  if (level.kind === "two-no-borrow") {
-    let a,b; do { a=randomInt(10,99); b=randomInt(10,a); }
-    while ((a%10)<(b%10) || Math.floor(a/10)<Math.floor(b/10));
+  const level=LEVELS.find(item=>item.id===levelId);
+  if(!level) throw new Error("Unknown level");
+  if(level.kind==="two-no-borrow"){
+    let a,b; do{a=randomInt(10,99);b=randomInt(10,a);}
+    while((a%10)<(b%10)||Math.floor(a/10)<Math.floor(b/10));
     return {a,b};
   }
-  if (level.kind === "two-borrow-ones") {
-    if (Math.random()<0.3) {
-      let a,b; do { a=randomInt(10,99); b=randomInt(10,a); }
-      while ((a%10)<(b%10) || Math.floor(a/10)<Math.floor(b/10));
+  if(level.kind==="two-borrow-ones"){
+    if(Math.random()<0.3){
+      let a,b; do{a=randomInt(10,99);b=randomInt(10,a);}
+      while((a%10)<(b%10)||Math.floor(a/10)<Math.floor(b/10));
       return {a,b};
     }
-    let a,b; do { a=randomInt(10,99); b=randomInt(10,a); }
-    while ((a%10)>=(b%10) || Math.floor(a/10)<Math.floor(b/10));
+    let a,b; do{a=randomInt(10,99);b=randomInt(10,a);}
+    while((a%10)>=(b%10)||Math.floor(a/10)<Math.floor(b/10));
     return {a,b};
   }
-  if (level.kind === "two-borrow-twice") {
-    if (Math.random()<0.3) {
-      let a,b; do { a=randomInt(10,99); b=randomInt(10,a); }
-      while ((a%10)<(b%10) || Math.floor(a/10)<Math.floor(b/10));
-      return {a,b};
-    }
-    let a,b; do { a=randomInt(10,99); b=randomInt(10,a); }
-    while ((a%10)>=(b%10) || Math.floor(a/10)<=Math.floor(b/10));
+  if(level.kind==="three-borrow-twice"){
+    let a,b;
+    do{
+      a=randomInt(100,999); b=randomInt(100,a-1);
+    }while(
+      (a%10)>=(b%10) ||
+      (Math.floor(a/10)%10)-1 >= (Math.floor(b/10)%10) ||
+      Math.floor(a/100)<Math.floor(b/100)
+    );
     return {a,b};
   }
-  let a=randomInt(100,999); let b=randomInt(10,a); return {a,b};
+  let a,b; do{a=randomInt(100,999);b=randomInt(100,a);}
+  while(a-b<1);
+  return {a,b};
 }
 
 function createProblemModel(a,b) {
@@ -391,7 +394,7 @@ function buildSteps(model) {
     }
     steps.push({
       kind:"sum-input",col,title:place+"の答えを書く",
-      text:data.borrowOut>0?"くり下がりをしたら、10をひいてから引こう。":"計算した答えを入力しよう。",
+      text:data.borrowOut>0?"くり下がりをしたら、10をもらってから引こう。":"計算した答えを入力しよう。",
       expression,answer:String(data.resultDigit),requiresBorrow:data.borrowOut>0,borrowOut:data.borrowOut,targetCol:col-1
     });
   }
@@ -436,7 +439,7 @@ function renderBoard(model) {
   }
 
   const plusCol = model.cols - bText.length - 1;
-  if (plusCol >= 0) getCell(2, plusCol).classList.add("plus");
+  if (plusCol >= 0) getCell(2, plusCol).classList.add("minus");
 
   updateBoardVisuals();
 }
@@ -651,7 +654,7 @@ function handlePadKey(key) {
     return;
   }
 
-  const maxLength = step.requiresBorrow ? 2 : 1;
+  const maxLength = 1;
   if (/^\d$/.test(key) && state.input.length < maxLength) {
     state.input += key;
     renderCurrentStep();
@@ -659,92 +662,57 @@ function handlePadKey(key) {
 }
 
 function handleBorrowChoice(choice) {
-  const step = state.steps[state.stepIndex];
-  if (!step || step.kind !== "borrow-check") return;
-
-  if (choice !== step.answer) {
+  const step=state.steps[state.stepIndex];
+  if(!step || step.kind!=="borrow-check") return;
+  if(choice!==step.answer){
     registerBattleMistake();
-    setFeedback(
-      choice === "yes"
-        ? "10以上になるか、もう一度ひいてみよう。"
-        : "10以上になるか、数字をもう一度見てみよう。",
-      "bad"
-    );
+    setFeedback("上の数字からそのまま引けるか、もう一度考えてみよう。","bad");
     markCurrentCellWrong();
     return;
   }
 
-  setFeedback(
-    choice === "yes"
-      ? "くり下がりあり。答えを2けたで入力しよう。"
-      : "くり下がりなし。答えを入力しよう。",
-    "good"
-  );
-
-  // くり下がりの選択直後に、答え入力へ確実に切り替える。
-  // 待ち時間を入れないことで、タブレットでもキーパッドの切り替えが途切れない。
-  state.stepIndex += 1;
-  state.input = "";
+  if(choice==="yes"){
+    const data=state.problem.columns[step.col];
+    if(step.targetCol>=state.problem.startCol){
+      const sourceCell=getCell(1,step.targetCol);
+      if(sourceCell) sourceCell.textContent=String(state.problem.aFull[step.targetCol]-1);
+    }
+    const currentCell=getCell(1,step.col);
+    if(currentCell) currentCell.textContent=String(data.aDigit+10);
+    setFeedback("くり下がりあり。10をもらってから引こう。","good");
+  }else{
+    setFeedback("くり下がりなし。答えを入力しよう。","good");
+  }
+  state.stepIndex++;
+  state.input="";
   renderCurrentStep();
 }
 
-function checkInput() {
-  const step = state.steps[state.stepIndex];
-  if (!step || step.kind !== "sum-input") return;
+function checkInput(){
+  const step=state.steps[state.stepIndex];
+  if(!step || step.kind!=="sum-input") return;
 
-  if (state.input !== step.answer) {
+  if(state.input!==step.answer){
     registerBattleMistake();
-    setFeedback(
-      step.requiresBorrow
-        ? "10以上になるときは、答えを2けたで入力します。"
-        : "たす数字をもう一度見てみよう。",
-      "bad"
-    );
+    setFeedback("答えをもう一度計算してみよう。","bad");
     markCurrentCellWrong();
     return;
   }
 
-  if (step.requiresBorrow) {
-    battlePlaceCorrect();
-    const full = Number(state.input);
-    // 2けたの答え（例：9−4→13）から、1の位とくり下がりを分けて書く。
-    const resultDigit = full % 10;
-    const carryDigit = Math.floor(full / 10);
+  battlePlaceCorrect();
+  getCell(3,step.col).textContent=step.answer;
+  setFeedback("正解。次のくらいへ進もう。","good");
+  state.input="";
 
-    if (carryDigit > 0) {
-      if (step.targetCol >= 0) {
-        if (step.col > state.problem.startCol) {
-          getCell(0, step.targetCol).textContent = String(carryDigit);
-        } else {
-          getCell(3, step.targetCol).textContent = String(carryDigit);
-        }
-      }
-    }
-    getCell(3, step.col).textContent = String(resultDigit);
-
-    setFeedback(
-      String(full) + "。 " +
-      String(carryDigit) + "をくり上げて、" +
-      String(resultDigit) + "を答えのくらいに書きました。",
-      "good"
-    );
-  } else {
-    battlePlaceCorrect();
-    getCell(3, step.col).textContent = step.answer;
-    setFeedback("正解。次のくらいへ進もう。", "good");
-  }
-
-  state.input = "";
-
-  window.setTimeout(() => {
-    state.stepIndex += 1;
-    if (state.steps[state.stepIndex]?.kind === "finish") {
-      if (battleState.mode) battleProblemComplete();
+  window.setTimeout(()=>{
+    state.stepIndex++;
+    if(state.steps[state.stepIndex]?.kind==="finish"){
+      if(battleState.mode) battleProblemComplete();
       else completeProblem();
-    } else {
+    }else{
       renderCurrentStep();
     }
-  }, 500);
+  },500);
 }
 
 function markCurrentCellWrong() {
