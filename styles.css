@@ -41,7 +41,7 @@ button:focus-visible{outline:3px solid #7aa6cf;outline-offset:2px}
 .board{display:grid;grid-auto-rows:var(--cell);min-width:max-content;background:#fff;border:2px solid var(--ink);border-radius:14px;overflow:hidden}
 .cell{width:var(--cell);height:var(--cell);display:flex;align-items:center;justify-content:center;border-right:1px solid #e7edf2;border-bottom:1px solid #e7edf2;font-size:clamp(30px,calc(var(--cell)*.52),52px);font-weight:800;position:relative;background:#fff}
 .cell.carry{font-size:clamp(19px,calc(var(--cell)*.31),30px);align-items:flex-start;padding-top:6px;color:#55708a}.cell.operand{color:var(--ink)}.cell.result{border-top:3px solid var(--ink);font-weight:900}
-.cell.minus::before{content:"＋";font-size:clamp(26px,calc(var(--cell)*.39),38px);color:var(--muted)}.cell.minus{font-size:0}
+.cell.minus::before{content:"−";font-size:clamp(26px,calc(var(--cell)*.39),38px);color:var(--muted)}.cell.minus{font-size:0}
 .cell.focus{background:var(--focus);box-shadow:inset 0 0 0 3px var(--focus-line);z-index:2}
 .cell.done{background:#f4fbf7;color:#246b4a}.cell.wrong{background:var(--danger);box-shadow:inset 0 0 0 3px var(--danger-line)}
 .column-guide{position:absolute;pointer-events:none;inset:0}.column-guide:after{content:"";position:absolute;top:0;width:3px;height:var(--guide-height,0);left:var(--guide-left,0);background:var(--focus-line);border-radius:99px}
@@ -699,3 +699,6 @@ button:focus-visible{outline:3px solid #7aa6cf;outline-offset:2px}
   #badgeScreen{padding:8px}
   .badge-page-card{width:100%;height:calc(100svh - 16px);border-radius:18px}
 }
+/* くり下がり表示：参考版と同じ「元の数字に斜線＋借りた数」の見せ方 */
+.cell.carry{font-size:clamp(16px,calc(var(--cell)*.28),28px);align-items:flex-start;padding-top:4px;white-space:pre-line;line-height:1.05;color:#6b7280}
+.cell.operand.slashed::after{content:"";position:absolute;left:8%;right:8%;top:50%;border-top:3px solid #ef4444;transform:translateY(-50%) rotate(25deg);pointer-events:none}
