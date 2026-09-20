@@ -21,12 +21,12 @@ const BATTLE_BACKGROUNDS = [
   "sea", "sky-island", "volcano", "cave"
 ].map(name => "https://tt-sensei.github.io/navi-character-/assets/web/fantasy/backgrounds/" + name + ".webp");
 const HEROES = [
-  { id:"riku", name:"りく", image:"riku-ninja" },
-  { id:"sora", name:"そら", image:"sora-swordsman" },
-  { id:"kai", name:"かい", image:"kai-mage" },
-  { id:"saku", name:"さく", image:"saku-cleric-healer" },
-  { id:"tsuki", name:"つき", image:"tsuki-archer" },
-  { id:"nami", name:"なみ", image:"nami-guardian-knight" }
+  { id:"riku", name:"りく", image:"riku-ninja", actionImage:"riku-ninja" },
+  { id:"sora", name:"そら", image:"sora-swordsman", actionImage:"sora-swordsman" },
+  { id:"kai", name:"かい", image:"kai-mage", actionImage:"kai-mage" },
+  { id:"saku", name:"さく", image:"saku-cleric-healer", actionImage:"saku-cleric" },
+  { id:"tsuki", name:"つき", image:"tsuki-archer", actionImage:"tsuki-archer" },
+  { id:"nami", name:"なみ", image:"nami-guardian-knight", actionImage:"nami-knight" }
 ];
 const GROUP3 = [
   ["kinoko-apple-mushroom","りんごキノコ"],
@@ -83,7 +83,7 @@ const battleState = {
   // 初期値を持たせ、保存データや描画途中の不具合があっても開始条件を失わないようにする。
   mode:"battle", heroIndex:0, levelId:1, enemyIndex:0, enemies:[],
   mistakes:0, correct:0, questionTotal:5, startedAt:0, timerId:null,
-  enemyHp:0, enemyMaxHp:0, finished:false
+  enemyHp:0, enemyMaxHp:0, combo:0, finished:false
 };
 const battleHud = $("#battleHud");
 
@@ -192,6 +192,7 @@ function startBattleMode(){
   battleState.enemyIndex=0;
   battleState.mistakes=0;
   battleState.correct=0;
+  battleState.combo=0;
   battleState.startedAt=performance.now();
   battleState.finished=false;
   showScreen(gameScreen);
@@ -250,23 +251,36 @@ function registerBattleMistake(){
     finishBattle(false,"ゲームオーバー");
   }
 }
-function battleAttack(){
+function battleHeroAction(kind="attack"){
+  const hero=HEROES[battleState.heroIndex];
+  const img=$("#heroBattleImage");
+  if(!hero || !img)return;
+  const actionName=hero.actionImage || hero.image;
+  img.src=FANTASY_BASE+(kind==="special"?"special":"attack")+"/"+actionName+"-"+kind+".png";
+  img.classList.remove("hero-action","hero-special");
+  void img.offsetWidth;
+  img.classList.add(kind==="special"?"hero-special":"hero-action");
+  window.setTimeout(()=>{
+    if(!battleState.finished) img.src=FANTASY_BASE+hero.image+".webp";
+    img.classList.remove("hero-action","hero-special");
+  },kind==="special"?900:550);
+}
+function battleAttack(kind="attack"){
   if(battleState.finished)return;
   battleState.enemyHp=Math.max(0,battleState.enemyHp-1);
   const banner=$("#battleFieldBanner");
-  $("#battleAttackMessage").textContent="こうげき！";
+  $("#battleAttackMessage").textContent=kind==="special"?"スペシャルこうげき！":"こうげき！";
   banner.hidden=false;
-  banner.classList.remove("attack-pop"); void banner.offsetWidth; banner.classList.add("attack-pop");
+  banner.classList.remove("attack-pop","special-pop"); void banner.offsetWidth;
+  banner.classList.add(kind==="special"?"special-pop":"attack-pop");
+  battleHeroAction(kind);
   const img=$("#enemyBattleImage");
   img.classList.remove("enemy-hit"); void img.offsetWidth; img.classList.add("enemy-hit");
   updateBattleHud();
-  window.setTimeout(()=>{
-    banner.hidden=true;
-    img.classList.remove("enemy-hit");
-  },500);
+  window.setTimeout(()=>{banner.hidden=true;img.classList.remove("enemy-hit");},kind==="special"?900:500);
 }
 function battlePlaceCorrect(){
-  battleAttack();
+  battleAttack(battleState.combo>0 && battleState.combo%5===0 ? "special" : "attack");
 }
 function battleProblemComplete(){
   if(battleState.finished)return;
@@ -892,14 +906,22 @@ function checkInput(){
 
   if(state.input!==step.answer){
     playSound("wrong", 0.16);
+    battleState.combo=0;
+    const hero=HEROES[battleState.heroIndex], img=$("#heroBattleImage");
+    if(hero && img){
+      img.src=FANTASY_BASE+"damage/"+(hero.actionImage || hero.image)+"-damage.png";
+      img.classList.remove("hero-action","hero-special"); img.classList.add("hero-damage");
+      window.setTimeout(()=>{if(!battleState.finished)img.src=FANTASY_BASE+hero.image+".webp";img.classList.remove("hero-damage");},650);
+    }
     registerBattleMistake();
     setFeedback("答えをもう一度計算してみよう。","bad");
     markCurrentCellWrong();
     return;
   }
 
+  battleState.combo+=1;
   battlePlaceCorrect();
-  playSound("correct", 0.2);
+  playSound(battleState.combo%5===0 ? "stageClear" : "correct", 0.2);
   getCell(4,step.col).textContent=step.answer;
   setFeedback("正解。次のくらいへ進もう。","good");
   state.input="";
