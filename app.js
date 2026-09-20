@@ -28,18 +28,29 @@ const HEROES = [
   { id:"nami", name:"なみ", image:"nami-guardian-knight" }
 ];
 const GROUP1 = [
-  ["happa-squirrel-leafy","はっぱリス"],
-  ["komorin-little-night-bat","こもりんナイトバット"],
-  ["purun-little-magic-slime","ぷるんスライム"],
-  ["ember-frost-pup","エンバーフロストパップ"],
-  ["sakura-snow-puff","さくらスノーパフ"],
-  ["star-bat","スターバット"],
-  ["night-snow-puff","ナイトスノーパフ"],
-  ["sunset-puru","サンセットぷる"],
-  ["mizutama-kappa","みずたまカッパ"],
-  ["lantern-firefly","ランタンホタル"],
-  ["cloud-rain-rabbit","くもあめウサギ"],
-  ["pebble-ram","こいしラム"]
+  ["kinoko-apple-mushroom","りんごキノコ"],
+  ["mofu-wolf-frost-pup","もふウルフ"],
+  ["acorn-leafy","どんぐりリーフ"],
+  ["moss-pebble-golem","モスこいしゴーレム"],
+  ["snow-mushroom","スノーキノコ"],
+  ["berry-leafy","ベリーリーフ"],
+  ["spring-moss-pup","スプリングモスパップ"],
+  ["tidal-newt","タイダルイモリ"],
+  ["coral-bubble-crab","コーラルバブルクラブ"],
+  ["moon-moth","月夜のモス"],
+  ["vine-chameleon","ヴァインカメレオン"],
+  ["dusk-feather-owl","たそがれフクロウ"],
+  ["shadow-crest-ferret","シャドウクレストフェレット"],
+  ["sprout-shell-turtle","スプラウトシェルカメ"],
+  ["shadow-crest-lynx","シャドウクレストリンクス"],
+  ["emberwing-raven","エンバーウィングレイヴン"],
+  ["prism-tail-drake","プリズムテイルドレイク"],
+  ["glacier-crest-hawk","グレイシャークレストホーク"],
+  ["whispering-mask-imp","ささやきマスクインプ"],
+  ["root-tangle-goblin","ルートタングルゴブリン"],
+  ["moonlit-wisp","月あかりウィスプ"],
+  ["paper-crane-spirit","ペーパーつる精霊"],
+  ["gearbit-mouse","ギアビットねずみ"],
 ];
 const BATTLE_RECORD_KEY = "hikizanHissanBattle.v1";
 const BATTLE_SETUP_KEY = "hikizanHissanBattleSetup.v1";
