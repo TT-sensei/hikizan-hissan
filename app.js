@@ -425,6 +425,97 @@ function createProblemModel(a,b) {
 }
 
 function placeName(index){return ["一のくらい","十のくらい","百のくらい","千のくらい"][index]||"このくらい";}
+function buildSteps(model) {
+  const steps = [];
+
+  for (let col = model.cols - 1; col >= model.startCol; col -= 1) {
+    const column = model.columns[col];
+    const requiresBorrow = column.borrowOut > 0;
+    const expression = placeName(column.placeIndex);
+
+    if (state.level?.id >= 2) {
+      steps.push({
+        kind: "borrow-check",
+        col,
+        title: requiresBorrow ? "くり下がりはする？" : "くり下がりはする？",
+        text: requiresBorrow
+          ? "下の数字のほうが大きいので、上の数字から10をもらいます。"
+          : "上の数字から、そのまま引けるか考えます。",
+        expression,
+        answer: requiresBorrow ? "yes" : "no",
+        borrowOut: column.borrowOut,
+        borrowInfo: column.borrowInfo
+      });
+
+      if (requiresBorrow && state.level?.id >= 3) {
+        steps.push({
+          kind: "borrow-origin",
+          col,
+          title: "どこから くり下げる？",
+          text: "10をもらうのは、十の位？ 百の位？",
+          expression,
+          answer: column.borrowInfo?.fromCol === col - 1 ? "tens" : "hundreds",
+          fromCol: column.borrowInfo?.fromCol ?? -1,
+          borrowInfo: column.borrowInfo
+        });
+      }
+    }
+
+    steps.push({
+      kind: "sum-input",
+      col,
+      targetCol: requiresBorrow ? col : -1,
+      title: "答えを書く",
+      text: expression + "の答えを考えよう。",
+      expression,
+      answer: String(column.resultDigit),
+      requiresBorrow
+    });
+  }
+
+  steps.push({ kind: "finish", title: "完成！", text: "筆算が完成しました。" });
+  return steps;
+}
+
+async function animateBorrow(info) {
+  if (!info) return;
+
+  const ordered = [...info.changedCols].sort((a,b) => a-b);
+
+  for (const col of ordered) {
+    const meta = info.meta[col];
+    if (!meta) continue;
+
+    const operandCell = getCell(1, col);
+    const carryCell = getCell(0, col);
+
+    if (col === info.fromCol) {
+      state.carryBottom[col] = String(meta.after);
+      if (operandCell) {
+        operandCell.classList.add("borrow-source");
+        operandCell.classList.add("slashed");
+        operandCell.textContent = String(meta.after);
+      }
+    } else if (col === ordered[ordered.length - 1]) {
+      state.carryTop[col] = String(meta.after);
+      if (operandCell) operandCell.textContent = String(meta.after);
+    } else {
+      state.carryTop[col] = String(meta.before + 10);
+      state.carryBottom[col] = String(meta.after);
+      if (operandCell) operandCell.textContent = String(meta.after);
+    }
+
+    renderBorrowAt(col);
+    carryCell?.classList.add("borrow-step");
+    operandCell?.classList.add("borrow-step");
+
+    await new Promise(resolve => window.setTimeout(resolve, 380));
+
+    carryCell?.classList.remove("borrow-step");
+    operandCell?.classList.remove("borrow-step");
+  }
+}
+
 function renderBoard(model) {
   board.style.setProperty("--cell", getCellSize(model.cols));
   board.style.gridTemplateColumns = "repeat(" + model.cols + ", var(--cell))";
@@ -489,7 +580,7 @@ function updateBoardVisuals() {
   const current = state.steps[state.stepIndex];
   if (!current) return;
 
-  if (current.kind === "borrow-check" || current.kind === "sum-input") {
+  if (current.kind === "borrow-check" || current.kind === "borrow-origin" || current.kind === "sum-input") {
     getCell(1, current.col)?.classList.add("focus");
     getCell(2, current.col)?.classList.add("focus");
     getCell(3, current.col)?.classList.add("focus");
@@ -606,10 +697,16 @@ function renderCurrentStep() {
     $("#answerDisplay").textContent = "✓";
     $("#answerDisplay").style.borderColor = "#67b78d";
     $("#answerDisplay").style.background = "#effaf4";
-  } else if (step.kind === "borrow-check") {
+  } else if (step.kind === "borrow-check" || step.kind === "borrow-origin") {
     $("#answerLabel").textContent = "くり下がりを選ぶ";
     prompt.textContent = step.expression;
     $("#answerDisplay").textContent = "する？ しない？";
+    $("#answerDisplay").style.borderColor = "";
+    $("#answerDisplay").style.background = "";
+  } else if (step.kind === "borrow-origin") {
+    $("#answerLabel").textContent = "くり下げる位を選ぶ";
+    prompt.textContent = step.expression;
+    $("#answerDisplay").textContent = "十の位？ 百の位？";
     $("#answerDisplay").style.borderColor = "";
     $("#answerDisplay").style.background = "";
   } else {
@@ -648,6 +745,18 @@ function renderKeypad() {
     return;
   }
 
+  if (step.kind === "borrow-origin") {
+    pad.innerHTML =
+      '<div class="carry-choice-wrap borrow-origin-choice">' +
+        '<p class="carry-choice-label">どこから くり下げる？</p>' +
+        '<div class="carry-choice-buttons">' +
+          '<button type="button" class="choice-button carry-origin" data-choice="tens">十の位</button>' +
+          '<button type="button" class="choice-button carry-origin" data-choice="hundreds">百の位</button>' +
+        '</div>' +
+      '</div>';
+    return;
+  }
+
   const keys = ["1","2","3","4","5","6","7","8","9","⌫","0","決定"];
   pad.innerHTML = keys.map(key => {
     const cls = key === "決定" ? "submit" : key === "⌫" ? "function" : "";
@@ -663,7 +772,7 @@ function setFeedback(message, type) {
 
 function handlePadKey(key) {
   const step = state.steps[state.stepIndex];
-  if (!step || step.kind === "finish" || step.kind === "borrow-check") return;
+  if (!step || step.kind === "finish" || step.kind === "borrow-check" || step.kind === "borrow-origin") return;
 
   if (key === "⌫") {
     state.input = "";
@@ -683,39 +792,40 @@ function handlePadKey(key) {
   }
 }
 
-function handleBorrowChoice(choice) {
+async function handleBorrowChoice(choice) {
   const step=state.steps[state.stepIndex];
-  if(!step || step.kind!=="borrow-check") return;
+  if(!step || (step.kind!=="borrow-check" && step.kind!=="borrow-origin")) return;
+
   if(choice!==step.answer){
     registerBattleMistake();
-    setFeedback("上の数字からそのまま引けるか、もう一度考えてみよう。","bad");
+    setFeedback(
+      step.kind==="borrow-origin"
+        ? "10をもらう位をもう一度考えてみよう。"
+        : "上の数字からそのまま引けるか、もう一度考えてみよう。",
+      "bad"
+    );
     markCurrentCellWrong();
     return;
   }
-  if(choice==="yes"){
-    const info=state.problem.columns[step.col].borrowInfo;
-    if(info){
-      for(const col of info.changedCols){
-        const meta=info.meta[col];
-        if(col===info.fromCol){
-          state.carryBottom[col]=String(meta.after);
-          getCell(1,col)?.classList.add("slashed");
-          getCell(1,col).textContent=String(meta.after);
-        }else if(col===step.col){
-          state.carryTop[col]=String(meta.after);
-          getCell(1,col).textContent=String(meta.after);
-        }else{
-          state.carryTop[col]=String(meta.before+10);
-          state.carryBottom[col]=String(meta.after);
-          getCell(1,col).textContent=String(meta.after);
-        }
-        renderBorrowAt(col);
-      }
+
+  if(step.kind==="borrow-check"){
+    if(choice==="yes"){
+      setFeedback("くり下がりをする。どこから10をもらうか考えよう。","good");
+      state.stepIndex++;
+      state.input="";
+      renderCurrentStep();
+      return;
     }
-    setFeedback("くり下がりをする。上の数字から10をもらおう。","good");
-  }else{
+
     setFeedback("くり下がりはしない。答えを入力しよう。","good");
+    state.stepIndex++;
+    state.input="";
+    renderCurrentStep();
+    return;
   }
+
+  setFeedback("ここから10をもらいます。","good");
+  await animateBorrow(step.borrowInfo);
   state.stepIndex++;
   state.input="";
   renderCurrentStep();
@@ -754,7 +864,7 @@ function markCurrentCellWrong() {
 
   const cells = [];
 
-  if (step.kind === "borrow-check" || step.kind === "sum-input") {
+  if (step.kind === "borrow-check" || step.kind === "borrow-origin" || step.kind === "sum-input") {
     cells.push(getCell(0, step.col), getCell(1, step.col), getCell(2, step.col), getCell(3, step.col));
     if (step.kind === "sum-input" && step.targetCol >= 0) {
       cells.push(getCell(0, step.targetCol), getCell(3, step.targetCol));
@@ -779,7 +889,7 @@ function completeProblem() {
   renderHome();
 
   const overlay = $("#completeOverlay");
-  $("#completeTitle").textContent = String(model.a) + "−" + String(model.b) + "＝" + String(model.sum);
+  $("#completeTitle").textContent = String(model.a) + "−" + String(model.b) + "＝" + String(model.difference);
   $("#completeText").textContent =
     "右のくらいから順に、筆算を完成させました。\n今回の正解：" + state.sessionCorrect + "問";
   $("#nextButton").textContent =
