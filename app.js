@@ -3,10 +3,10 @@ const $ = (selector, root = document) => root.querySelector(selector);
 const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 
 const LEVELS = [
-  { id: 1, short: "LEVEL 1", name: "くり上がりなし", description: "2けた ＋ 2けた\nくり上がり なし", example: "34＋25", kind: "two-no-carry" },
-  { id: 2, short: "LEVEL 2", name: "一のくらいでくり上がり", description: "2けた ＋ 2けた\nくり上がり 1回", example: "27＋18", kind: "two-carry-ones" },
-  { id: 3, short: "LEVEL 3", name: "二回のくり上がり", description: "2けた ＋ 2けた\nくり上がり 2回", example: "68＋57", kind: "two-carry-twice" },
-  { id: 4, short: "LEVEL 4", name: "3けたの筆算", description: "3けた ＋ 3けた\nくらいをそろえて計算", example: "246＋137", kind: "three-digit" }
+  { id:1, short:"LEVEL 1", name:"くり下がりなし", description:"2けた − 2けた\\nくり下がり なし", example:"54−23", kind:"two-no-borrow" },
+  { id:2, short:"LEVEL 2", name:"一のくらいでくり下がり", description:"2けた − 2けた\\nくり下がり 1回", example:"52−18", kind:"two-borrow-ones" },
+  { id:3, short:"LEVEL 3", name:"二回のくり下がり", description:"2けた − 2けた\\nくり下がり 2回", example:"82−47", kind:"two-borrow-twice" },
+  { id:4, short:"LEVEL 4", name:"3けたの筆算", description:"3けた − 2〜3けた\\nくらいをそろえて計算", example:"432−178", kind:"three-digit" }
 ];
 
 const SESSION_SIZE = 10;
@@ -41,8 +41,8 @@ const GROUP1 = [
   ["cloud-rain-rabbit","くもあめウサギ"],
   ["pebble-ram","こいしラム"]
 ];
-const BATTLE_RECORD_KEY = "tashizanHissanBattle.v1";
-const BATTLE_SETUP_KEY = "tashizanHissanBattleSetup.v1";
+const BATTLE_RECORD_KEY = "hikizanHissanBattle.v1";
+const BATTLE_SETUP_KEY = "hikizanHissanBattleSetup.v1";
 const battleState = {
   // 初期値を持たせ、保存データや描画途中の不具合があっても開始条件を失わないようにする。
   mode:"battle", heroIndex:0, levelId:1, enemyIndex:0, enemies:[],
@@ -289,7 +289,7 @@ function startAgainBattle(){
   startBattleMode();
 }
 
-const STORAGE_KEY = "tashizanHissanRecord.v1";
+const STORAGE_KEY = "hikizanHissanRecord.v1";
 
 const state = {
   level: null,
@@ -332,162 +332,73 @@ function randomInt(min, max) {
 function generateProblem(levelId) {
   const level = LEVELS.find(item => item.id === levelId);
   if (!level) throw new Error("Unknown level");
-
-  if (level.kind === "two-no-carry") {
-    let a, b;
-    do {
-      a = randomInt(10, 99);
-      b = randomInt(10, 99);
-    } while ((a % 10) + (b % 10) >= 10 || Math.floor(a / 10) + Math.floor(b / 10) >= 10);
-    return { a, b };
+  if (level.kind === "two-no-borrow") {
+    let a,b; do { a=randomInt(10,99); b=randomInt(10,a); }
+    while ((a%10)<(b%10) || Math.floor(a/10)<Math.floor(b/10));
+    return {a,b};
   }
-
-  if (level.kind === "two-carry-ones") {
-    // レベル2は、基本は1の位でくり上がるが、ときどき「なし」も入れる。
-    if (Math.random() < 0.3) {
-      let a, b;
-      do {
-        a = randomInt(10, 99);
-        b = randomInt(10, 99);
-      } while (
-        (a % 10) + (b % 10) >= 10 ||
-        Math.floor(a / 10) + Math.floor(b / 10) >= 10
-      );
-      return { a, b };
+  if (level.kind === "two-borrow-ones") {
+    if (Math.random()<0.3) {
+      let a,b; do { a=randomInt(10,99); b=randomInt(10,a); }
+      while ((a%10)<(b%10) || Math.floor(a/10)<Math.floor(b/10));
+      return {a,b};
     }
-
-    let a, b;
-    do {
-      a = randomInt(10, 99);
-      b = randomInt(10, 99);
-    } while (
-      (a % 10) + (b % 10) < 10 ||
-      Math.floor(a / 10) + Math.floor(b / 10) + 1 >= 10
-    );
-    return { a, b };
+    let a,b; do { a=randomInt(10,99); b=randomInt(10,a); }
+    while ((a%10)>=(b%10) || Math.floor(a/10)<Math.floor(b/10));
+    return {a,b};
   }
-
-  if (level.kind === "two-carry-twice") {
-    // レベル3も、ときどき「どの位もくり上がらない」問題を入れる。
-    if (Math.random() < 0.3) {
-      let a, b;
-      do {
-        a = randomInt(10, 99);
-        b = randomInt(10, 99);
-      } while (
-        (a % 10) + (b % 10) >= 10 ||
-        Math.floor(a / 10) + Math.floor(b / 10) >= 10
-      );
-      return { a, b };
+  if (level.kind === "two-borrow-twice") {
+    if (Math.random()<0.3) {
+      let a,b; do { a=randomInt(10,99); b=randomInt(10,a); }
+      while ((a%10)<(b%10) || Math.floor(a/10)<Math.floor(b/10));
+      return {a,b};
     }
-
-    let a, b;
-    do {
-      a = randomInt(10, 99);
-      b = randomInt(10, 99);
-    } while (
-      (a % 10) + (b % 10) < 10 ||
-      Math.floor(a / 10) + Math.floor(b / 10) + 1 < 10
-    );
-    return { a, b };
+    let a,b; do { a=randomInt(10,99); b=randomInt(10,a); }
+    while ((a%10)>=(b%10) || Math.floor(a/10)<=Math.floor(b/10));
+    return {a,b};
   }
-
-  return { a: randomInt(100, 999), b: randomInt(100, 999) };
+  let a=randomInt(100,999); let b=randomInt(10,a); return {a,b};
 }
 
-function createProblemModel(a, b) {
-  const aDigits = String(a).split("").map(Number);
-  const bDigits = String(b).split("").map(Number);
-  const maxDigits = Math.max(aDigits.length, bDigits.length);
-  const cols = maxDigits + 1;
-  const startCol = cols - maxDigits;
-  const aFull = Array(cols).fill(0);
-  const bFull = Array(cols).fill(0);
-
-  aDigits.forEach((digit, index) => {
-    aFull[cols - aDigits.length + index] = digit;
-  });
-  bDigits.forEach((digit, index) => {
-    bFull[cols - bDigits.length + index] = digit;
-  });
-
-  const columns = [];
-  let carry = 0;
-
-  for (let col = cols - 1; col >= startCol; col -= 1) {
-    const aDigit = aFull[col];
-    const bDigit = bFull[col];
-    const carryIn = carry;
-    const sum = aDigit + bDigit + carryIn;
-
-    columns[col] = {
-      col,
-      placeIndex: cols - 1 - col,
-      aDigit,
-      bDigit,
-      carryIn,
-      resultDigit: sum % 10,
-      carryOut: Math.floor(sum / 10)
-    };
-    carry = Math.floor(sum / 10);
+function createProblemModel(a,b) {
+  const aDigits=String(a).split("").map(Number);
+  const bDigits=String(b).split("").map(Number);
+  const maxDigits=Math.max(aDigits.length,bDigits.length);
+  const cols=maxDigits+1, startCol=cols-maxDigits;
+  const aFull=Array(cols).fill(0), bFull=Array(cols).fill(0);
+  aDigits.forEach((d,i)=>aFull[cols-aDigits.length+i]=d);
+  bDigits.forEach((d,i)=>bFull[cols-bDigits.length+i]=d);
+  const columns=[]; let borrow=0;
+  for(let col=cols-1; col>=startCol; col--){
+    const aDigit=aFull[col], bDigit=bFull[col], borrowIn=borrow;
+    const adjustedTop=aDigit-borrowIn;
+    const borrowOut=adjustedTop<bDigit?1:0;
+    const resultDigit=borrowOut?adjustedTop+10-bDigit:adjustedTop-bDigit;
+    columns[col]={col,placeIndex:cols-1-col,aDigit,bDigit,borrowIn,adjustedTop,resultDigit,borrowOut};
+    borrow=borrowOut;
   }
-
-  return { a, b, sum: a + b, cols, maxDigits, startCol, aFull, bFull, columns };
+  return {a,b,difference:a-b,cols,maxDigits,startCol,aFull,bFull,columns};
 }
 
 function buildSteps(model) {
-  const steps = [];
-  const alwaysCheckCarry = state.level && state.level.id >= 2;
-
-  for (let col = model.cols - 1; col >= model.startCol; col -= 1) {
-    const data = model.columns[col];
-    const place = placeName(data.placeIndex);
-    const expression = data.carryIn > 0
-      ? String(data.aDigit) + "＋" + String(data.bDigit) + "＋1"
-      : String(data.aDigit) + "＋" + String(data.bDigit);
-
-    // LEVEL 2以上は、くり上がりの有無を必ず判断してから答えを書く。
-    // 「ある／なし」を毎回入れることで、くり上がりを意識する習慣をつくる。
-    if (alwaysCheckCarry) {
-      steps.push({
-        kind: "carry-check",
-        col,
-        title: place + "の くり上がりは？",
-        text: "まず計算して、10以上になるか考えよう。",
-        expression,
-        answer: data.carryOut > 0 ? "yes" : "no"
-      });
+  const steps=[]; const alwaysCheckBorrow=state.level && state.level.id>=2;
+  for(let col=model.cols-1; col>=model.startCol; col--){
+    const data=model.columns[col], place=placeName(data.placeIndex);
+    const top=data.borrowIn>0?String(data.adjustedTop):String(data.aDigit);
+    const expression=top+"−"+String(data.bDigit);
+    if(alwaysCheckBorrow){
+      steps.push({kind:"borrow-check",col,title:place+"の くり下がりは？",text:"上の数字からそのまま引けるか考えよう。",expression,answer:data.borrowOut>0?"yes":"no"});
     }
-
     steps.push({
-      kind: "sum-input",
-      col,
-      title: place + "の答えを書く",
-      text: data.carryOut > 0
-        ? "10以上になったら、答えを2けたで入力しよう。"
-        : "計算した答えを入力しよう。",
-      expression,
-      answer: data.carryOut > 0
-        ? String(data.aDigit + data.bDigit + data.carryIn)
-        : String(data.resultDigit),
-      requiresCarry: data.carryOut > 0,
-      carryOut: data.carryOut,
-      targetCol: col - 1
+      kind:"sum-input",col,title:place+"の答えを書く",
+      text:data.borrowOut>0?"くり下がりをしたら、10をひいてから引こう。":"計算した答えを入力しよう。",
+      expression,answer:String(data.resultDigit),requiresBorrow:data.borrowOut>0,borrowOut:data.borrowOut,targetCol:col-1
     });
   }
-
-  steps.push({
-    kind: "finish",
-    title: "筆算のできあがり",
-    text: "右のくらいから順に、たして、くり上がりを考えて、答えを書くことができました。"
-  });
-
+  steps.push({kind:"finish",title:"筆算のできあがり",text:"右のくらいから順に、くり下がりを考えて、答えを書くことができました。"});
   return steps;
 }
-function placeName(index) {
-  return ["一のくらい", "十のくらい", "百のくらい", "千のくらい"][index] || "このくらい";
-}
-
+function placeName(index){return ["一のくらい","十のくらい","百のくらい","千のくらい"][index]||"このくらい";}
 function renderBoard(model) {
   board.style.setProperty("--cell", getCellSize(model.cols));
   board.style.gridTemplateColumns = "repeat(" + model.cols + ", var(--cell))";
@@ -553,14 +464,14 @@ function updateBoardVisuals() {
   const current = state.steps[state.stepIndex];
   if (!current) return;
 
-  if (current.kind === "carry-check" || current.kind === "sum-input") {
+  if (current.kind === "borrow-check" || current.kind === "sum-input") {
     getCell(1, current.col)?.classList.add("focus");
     getCell(2, current.col)?.classList.add("focus");
     getCell(3, current.col)?.classList.add("focus");
-    if (current.carryOut > 0 || current.kind === "carry-check") {
+    if (current.borrowOut > 0 || current.kind === "borrow-check") {
       getCell(0, current.col)?.classList.add("focus");
     }
-    if (current.kind === "sum-input" && current.requiresCarry && current.targetCol >= 0) {
+    if (current.kind === "sum-input" && current.requiresBorrow && current.targetCol >= 0) {
       getCell(0, current.targetCol)?.classList.add("focus");
     }
   }
@@ -591,7 +502,7 @@ function updateColumnGuide() {
     return;
   }
 
-  const col = current.kind === "sum-input" && current.requiresCarry && current.targetCol >= 0
+  const col = current.kind === "sum-input" && current.requiresBorrow && current.targetCol >= 0
     ? current.targetCol
     : current.col;
 
@@ -616,7 +527,7 @@ function updateStepRail() {
 
   if (!current) return;
 
-  // LEVEL 1は、くり上がり確認を行わない2段階表示にする。
+  // LEVEL 1は、くり下がり確認を行わない2段階表示にする。
   if (state.level?.id === 1) {
     pills[0].textContent = "① 計算する";
     pills[1].textContent = "② 答えを書く";
@@ -633,10 +544,10 @@ function updateStepRail() {
   }
 
   pills[0].textContent = "① 計算する";
-  pills[1].textContent = "② くり上がり？";
+  pills[1].textContent = "② くり下がり？";
   pills[2].textContent = "③ 答えを書く";
 
-  if (current.kind === "carry-check") {
+  if (current.kind === "borrow-check") {
     pills[0].classList.add("done");
     pills[1].classList.add("active");
   } else if (current.kind === "sum-input") {
@@ -666,18 +577,18 @@ function renderCurrentStep() {
     prompt.hidden = true;
     $("#answerLabel").textContent = "完成";
     prompt.textContent =
-      String(state.problem.a) + "＋" + String(state.problem.b) + "＝" + String(state.problem.sum);
+      String(state.problem.a) + "−" + String(state.problem.b) + "＝" + String(state.problem.difference);
     $("#answerDisplay").textContent = "✓";
     $("#answerDisplay").style.borderColor = "#67b78d";
     $("#answerDisplay").style.background = "#effaf4";
-  } else if (step.kind === "carry-check") {
-    $("#answerLabel").textContent = "くり上がりを選ぶ";
+  } else if (step.kind === "borrow-check") {
+    $("#answerLabel").textContent = "くり下がりを選ぶ";
     prompt.textContent = step.expression;
     $("#answerDisplay").textContent = "ある？ なし？";
     $("#answerDisplay").style.borderColor = "";
     $("#answerDisplay").style.background = "";
   } else {
-    $("#answerLabel").textContent = step.requiresCarry
+    $("#answerLabel").textContent = step.requiresBorrow
       ? "2けたの答えを入力"
       : "答えを入力";
     prompt.textContent = step.expression + "＝";
@@ -700,10 +611,10 @@ function renderKeypad() {
     return;
   }
 
-  if (step.kind === "carry-check") {
+  if (step.kind === "borrow-check") {
     pad.innerHTML =
       '<div class="carry-choice-wrap">' +
-        '<p class="carry-choice-label">くり上がりはある？ なし？</p>' +
+        '<p class="carry-choice-label">くり下がりはある？ なし？</p>' +
         '<div class="carry-choice-buttons">' +
           '<button type="button" class="choice-button carry-yes" data-choice="yes">ある</button>' +
           '<button type="button" class="choice-button carry-no" data-choice="no">なし</button>' +
@@ -727,7 +638,7 @@ function setFeedback(message, type) {
 
 function handlePadKey(key) {
   const step = state.steps[state.stepIndex];
-  if (!step || step.kind === "finish" || step.kind === "carry-check") return;
+  if (!step || step.kind === "finish" || step.kind === "borrow-check") return;
 
   if (key === "⌫") {
     state.input = "";
@@ -740,22 +651,22 @@ function handlePadKey(key) {
     return;
   }
 
-  const maxLength = step.requiresCarry ? 2 : 1;
+  const maxLength = step.requiresBorrow ? 2 : 1;
   if (/^\d$/.test(key) && state.input.length < maxLength) {
     state.input += key;
     renderCurrentStep();
   }
 }
 
-function handleCarryChoice(choice) {
+function handleBorrowChoice(choice) {
   const step = state.steps[state.stepIndex];
-  if (!step || step.kind !== "carry-check") return;
+  if (!step || step.kind !== "borrow-check") return;
 
   if (choice !== step.answer) {
     registerBattleMistake();
     setFeedback(
       choice === "yes"
-        ? "10以上になるか、もう一度たしてみよう。"
+        ? "10以上になるか、もう一度ひいてみよう。"
         : "10以上になるか、数字をもう一度見てみよう。",
       "bad"
     );
@@ -765,12 +676,12 @@ function handleCarryChoice(choice) {
 
   setFeedback(
     choice === "yes"
-      ? "くり上がりあり。答えを2けたで入力しよう。"
-      : "くり上がりなし。答えを入力しよう。",
+      ? "くり下がりあり。答えを2けたで入力しよう。"
+      : "くり下がりなし。答えを入力しよう。",
     "good"
   );
 
-  // くり上がりの選択直後に、答え入力へ確実に切り替える。
+  // くり下がりの選択直後に、答え入力へ確実に切り替える。
   // 待ち時間を入れないことで、タブレットでもキーパッドの切り替えが途切れない。
   state.stepIndex += 1;
   state.input = "";
@@ -784,7 +695,7 @@ function checkInput() {
   if (state.input !== step.answer) {
     registerBattleMistake();
     setFeedback(
-      step.requiresCarry
+      step.requiresBorrow
         ? "10以上になるときは、答えを2けたで入力します。"
         : "たす数字をもう一度見てみよう。",
       "bad"
@@ -793,10 +704,10 @@ function checkInput() {
     return;
   }
 
-  if (step.requiresCarry) {
+  if (step.requiresBorrow) {
     battlePlaceCorrect();
     const full = Number(state.input);
-    // 2けたの答え（例：9＋4→13）から、1の位とくり上がりを分けて書く。
+    // 2けたの答え（例：9−4→13）から、1の位とくり下がりを分けて書く。
     const resultDigit = full % 10;
     const carryDigit = Math.floor(full / 10);
 
@@ -842,7 +753,7 @@ function markCurrentCellWrong() {
 
   const cells = [];
 
-  if (step.kind === "carry-check" || step.kind === "sum-input") {
+  if (step.kind === "borrow-check" || step.kind === "sum-input") {
     cells.push(getCell(0, step.col), getCell(1, step.col), getCell(2, step.col), getCell(3, step.col));
     if (step.kind === "sum-input" && step.targetCol >= 0) {
       cells.push(getCell(0, step.targetCol), getCell(3, step.targetCol));
@@ -867,7 +778,7 @@ function completeProblem() {
   renderHome();
 
   const overlay = $("#completeOverlay");
-  $("#completeTitle").textContent = String(model.a) + "＋" + String(model.b) + "＝" + String(model.sum);
+  $("#completeTitle").textContent = String(model.a) + "−" + String(model.b) + "＝" + String(model.sum);
   $("#completeText").textContent =
     "右のくらいから順に、筆算を完成させました。\n今回の正解：" + state.sessionCorrect + "問";
   $("#nextButton").textContent =
@@ -906,7 +817,7 @@ function startQuestion() {
   state.stepIndex = 0;
   state.input = "";
 
-  $("#problemExpression").textContent = String(raw.a) + "＋" + String(raw.b) + "＝";
+  $("#problemExpression").textContent = String(raw.a) + "−" + String(raw.b) + "＝";
   hintBox.hidden = true;
   state.hintVisible = false;
 
@@ -954,7 +865,7 @@ function showHint() {
   state.hintVisible = true;
   const prompt = $("#calculationPrompt");
   prompt.hidden = false;
-  prompt.textContent = step.kind === "carry-check"
+  prompt.textContent = step.kind === "borrow-check"
     ? step.expression
     : step.expression + "＝";
 }
@@ -962,7 +873,7 @@ function showHint() {
 $("#numberPad").addEventListener("click", event => {
   const choice = event.target.closest("[data-choice]");
   if (choice) {
-    handleCarryChoice(choice.dataset.choice);
+    handleBorrowChoice(choice.dataset.choice);
     return;
   }
 
