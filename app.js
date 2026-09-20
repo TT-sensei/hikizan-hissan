@@ -5,7 +5,7 @@ const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
 const LEVELS = [
   { id:1, short:"LEVEL 1", name:"くり下がりなし", description:"2けた − 2けた\\nくり下がり なし", example:"54−23", kind:"two-no-borrow" },
   { id:2, short:"LEVEL 2", name:"くり下がり1回", description:"2けた − 2けた\\n0からのくり下がりはなし", example:"52−18", kind:"two-borrow-once" },
-  { id:3, short:"LEVEL 3", name:"3けた − 2けた", description:"3けた − 2けた\\n0からのくり下がりはなし", example:"102−18", kind:"three-two" },
+  { id:3, short:"LEVEL 3", name:"3けた − 2けた", description:"3けた − 2けた\\n0をまたぐくり下がりも考える", example:"102−18", kind:"three-two" },
   { id:4, short:"LEVEL 4", name:"3けた − 3けた", description:"3けた − 3けた\\nくり下がりはランダム", example:"432−178", kind:"three-three-random" }
 ];
 
@@ -364,18 +364,14 @@ function generateProblem(levelId) {
     return {a,b};
   }
 
-  if(level.kind==="three-two"){
+    if(level.kind==="three-two"){
     let a,b;
     do {
       a=randomInt(100,999);
       b=randomInt(10,99);
     } while(
       a<=b ||
-      // 0のくらいからのくり下がりは禁止。
-      ((a%10)===0 && (b%10)>0) ||
-      // 十のくらいが0のとき、百のくらいから十のくらいへの
-      // 連続的なくり下がりが必要になる問題も除外。
-      (Math.floor(a/10)%10===0 && Math.floor(b/10)%10>0)
+      (a%10)>=(b%10)
     );
     return {a,b};
   }
