@@ -21,12 +21,12 @@ const BATTLE_BACKGROUNDS = [
   "sea", "sky-island", "volcano", "cave"
 ].map(name => "https://tt-sensei.github.io/navi-character-/assets/web/fantasy/backgrounds/" + name + ".webp");
 const HEROES = [
-  { id:"riku", name:"りく", image:"riku-ninja", actionImage:"riku-ninja" },
-  { id:"sora", name:"そら", image:"sora-swordsman", actionImage:"sora-swordsman" },
-  { id:"kai", name:"かい", image:"kai-mage", actionImage:"kai-mage" },
-  { id:"saku", name:"さく", image:"saku-cleric-healer", actionImage:"saku-cleric" },
-  { id:"tsuki", name:"つき", image:"tsuki-archer", actionImage:"tsuki-archer" },
-  { id:"nami", name:"なみ", image:"nami-guardian-knight", actionImage:"nami-knight" }
+  { id:"riku", name:"りく", image:"riku-ninja" },
+  { id:"sora", name:"そら", image:"sora-swordsman" },
+  { id:"kai", name:"かい", image:"kai-mage" },
+  { id:"saku", name:"さく", image:"saku-cleric-healer" },
+  { id:"tsuki", name:"つき", image:"tsuki-archer" },
+  { id:"nami", name:"なみ", image:"nami-guardian-knight" }
 ];
 const GROUP3 = [
   ["kinoko-apple-mushroom","りんごキノコ"],
@@ -255,8 +255,8 @@ function battleHeroAction(kind="attack"){
   const hero=HEROES[battleState.heroIndex];
   const img=$("#heroBattleImage");
   if(!hero || !img)return;
-  const actionName=hero.actionImage || hero.image;
-  img.src=FANTASY_BASE+(kind==="special"?"special":"attack")+"/"+actionName+"-"+kind+".png";
+  const actionName=hero.image;
+  img.src=FANTASY_BASE+(kind==="special"?"special":"attack")+"/"+actionName+"-"+kind+".webp";
   img.classList.remove("hero-action","hero-special");
   void img.offsetWidth;
   img.classList.add(kind==="special"?"hero-special":"hero-action");
@@ -909,7 +909,7 @@ function checkInput(){
     battleState.combo=0;
     const hero=HEROES[battleState.heroIndex], img=$("#heroBattleImage");
     if(hero && img){
-      img.src=FANTASY_BASE+"damage/"+(hero.actionImage || hero.image)+"-damage.png";
+      img.src=FANTASY_BASE+"damage/"+hero.image+"-damage.webp";
       img.classList.remove("hero-action","hero-special"); img.classList.add("hero-damage");
       window.setTimeout(()=>{if(!battleState.finished)img.src=FANTASY_BASE+hero.image+".webp";img.classList.remove("hero-damage");},650);
     }
