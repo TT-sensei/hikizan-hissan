@@ -312,7 +312,10 @@ const state = {
   steps: [],
   stepIndex: 0,
   input: "",
-  hintVisible: false
+  hintVisible: false,
+  carryTop: [],
+  carryBottom: [],
+  slashedCols: []
 };
 
 const homeScreen = $("#homeScreen");
@@ -394,42 +397,46 @@ function createProblemModel(a,b) {
   const aFull=Array(cols).fill(0), bFull=Array(cols).fill(0);
   aDigits.forEach((d,i)=>aFull[cols-aDigits.length+i]=d);
   bDigits.forEach((d,i)=>bFull[cols-bDigits.length+i]=d);
-  const columns=[]; let borrow=0;
+  const columns=[];
+  const work=aFull.slice();
+
   for(let col=cols-1; col>=startCol; col--){
-    const aDigit=aFull[col], bDigit=bFull[col], borrowIn=borrow;
-    const adjustedTop=aDigit-borrowIn;
-    const borrowOut=adjustedTop<bDigit?1:0;
-    const resultDigit=borrowOut?adjustedTop+10-bDigit:adjustedTop-bDigit;
-    columns[col]={col,placeIndex:cols-1-col,aDigit,bDigit,borrowIn,adjustedTop,resultDigit,borrowOut};
-    borrow=borrowOut;
+    const beforeDigit=work[col], bDigit=bFull[col];
+    let borrowOut=0, borrowInfo=null;
+    if(beforeDigit<bDigit){
+      let fromCol=col-1;
+      while(fromCol>=0 && work[fromCol]===0) fromCol--;
+      if(fromCol>=0){
+        const before={}, after={};
+        for(let k=fromCol;k<=col;k++) before[k]=work[k];
+        for(let k=fromCol;k<col;k++){ work[k]-=1; work[k+1]+=10; }
+        for(let k=fromCol;k<=col;k++) after[k]=work[k];
+        borrowOut=1;
+        borrowInfo={
+          fromCol,
+          changedCols:Object.keys(before).map(Number).filter(k=>before[k]!==after[k]),
+          meta:Object.fromEntries(Object.keys(before).map(k=>[k,{before:before[k],after:after[k]}]))
+        };
+      }
+    }
+    const adjustedTop=work[col];
+    columns[col]={
+      col, placeIndex:cols-1-col, aDigit:beforeDigit, adjustedTop, bDigit,
+      borrowOut, resultDigit:adjustedTop-bDigit, borrowInfo
+    };
   }
   return {a,b,difference:a-b,cols,maxDigits,startCol,aFull,bFull,columns};
 }
 
-function buildSteps(model) {
-  const steps=[]; const alwaysCheckBorrow=state.level && state.level.id>=2;
-  for(let col=model.cols-1; col>=model.startCol; col--){
-    const data=model.columns[col], place=placeName(data.placeIndex);
-    const top=data.borrowIn>0?String(data.adjustedTop):String(data.aDigit);
-    const expression=top+"−"+String(data.bDigit);
-    if(alwaysCheckBorrow){
-      steps.push({kind:"borrow-check",col,title:place+"の くり下がりは する？ しない？",text:"上の数字からそのまま引けるか考えよう。",expression,answer:data.borrowOut>0?"yes":"no"});
-    }
-    steps.push({
-      kind:"sum-input",col,title:place+"の答えを書く",
-      text:data.borrowOut>0?"くり下がりをしたら、10をもらってから引こう。":"計算した答えを入力しよう。",
-      expression,answer:String(data.resultDigit),requiresBorrow:data.borrowOut>0,borrowOut:data.borrowOut,targetCol:col-1
-    });
-  }
-  steps.push({kind:"finish",title:"筆算のできあがり",text:"右のくらいから順に、くり下がりを考えて、答えを書くことができました。"});
-  return steps;
-}
 function placeName(index){return ["一のくらい","十のくらい","百のくらい","千のくらい"][index]||"このくらい";}
 function renderBoard(model) {
   board.style.setProperty("--cell", getCellSize(model.cols));
   board.style.gridTemplateColumns = "repeat(" + model.cols + ", var(--cell))";
   board.innerHTML = "";
   state.boardCells = [];
+  state.carryTop = new Array(model.cols).fill("");
+  state.carryBottom = new Array(model.cols).fill("");
+  state.slashedCols = [];
 
   function createRow(className, rowIndex) {
     for (let col = 0; col < model.cols; col += 1) {
@@ -442,29 +449,25 @@ function renderBoard(model) {
       state.boardCells.push(cell);
     }
   }
-
   createRow("carry", 0);
   createRow("operand", 1);
   createRow("operand", 2);
   createRow("result", 3);
 
-  const aText = String(model.a);
-  const bText = String(model.b);
+  const aText=String(model.a), bText=String(model.b);
+  for(let i=0;i<aText.length;i++) getCell(1,model.cols-aText.length+i).textContent=aText[i];
+  for(let i=0;i<bText.length;i++) getCell(2,model.cols-bText.length+i).textContent=bText[i];
 
-  for (let i = 0; i < aText.length; i += 1) {
-    const col = model.cols - aText.length + i;
-    getCell(1, col).textContent = aText[i];
-  }
-
-  for (let i = 0; i < bText.length; i += 1) {
-    const col = model.cols - bText.length + i;
-    getCell(2, col).textContent = bText[i];
-  }
-
-  const plusCol = model.cols - bText.length - 1;
-  if (plusCol >= 0) getCell(2, plusCol).classList.add("minus");
-
+  const minusCol=model.cols-bText.length-1;
+  if(minusCol>=0) getCell(2,minusCol).classList.add("minus");
   updateBoardVisuals();
+}
+
+function renderBorrowAt(col) {
+  const cell=getCell(0,col);
+  if(!cell) return;
+  const top=state.carryTop[col]||"", bottom=state.carryBottom[col]||"";
+  cell.textContent=top&&bottom ? top+"\n"+bottom : (top||bottom||"");
 }
 
 function getCell(row, col) {
@@ -693,16 +696,27 @@ function handleBorrowChoice(choice) {
     markCurrentCellWrong();
     return;
   }
-
   if(choice==="yes"){
-    const data=state.problem.columns[step.col];
-    if(step.targetCol>=state.problem.startCol){
-      const sourceCell=getCell(1,step.targetCol);
-      if(sourceCell) sourceCell.textContent=String(state.problem.aFull[step.targetCol]-1);
+    const info=state.problem.columns[step.col].borrowInfo;
+    if(info){
+      for(const col of info.changedCols){
+        const meta=info.meta[col];
+        if(col===info.fromCol){
+          state.carryBottom[col]=String(meta.after);
+          getCell(1,col)?.classList.add("slashed");
+          getCell(1,col).textContent=String(meta.after);
+        }else if(col===step.col){
+          state.carryTop[col]=String(meta.after);
+          getCell(1,col).textContent=String(meta.after);
+        }else{
+          state.carryTop[col]=String(meta.before+10);
+          state.carryBottom[col]=String(meta.after);
+          getCell(1,col).textContent=String(meta.after);
+        }
+        renderBorrowAt(col);
+      }
     }
-    const currentCell=getCell(1,step.col);
-    if(currentCell) currentCell.textContent=String(data.aDigit+10);
-    setFeedback("くり下がりをする。10をもらってから引こう。","good");
+    setFeedback("くり下がりをする。上の数字から10をもらおう。","good");
   }else{
     setFeedback("くり下がりはしない。答えを入力しよう。","good");
   }
