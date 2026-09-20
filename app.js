@@ -514,7 +514,7 @@ async function animateBorrow(info) {
     const meta = info.meta[col];
     if (!meta) continue;
 
-    const operandCell = getCell(1, col);
+    const operandCell = getCell(4, col);
     const carryCell = getCell(0, col);
 
     // 元の数字は変えず、上の空いたマスに「くり下がりの書き込み」を残す。
@@ -568,24 +568,27 @@ function renderBoard(model) {
     }
   }
   createRow("carry", 0);
-  createRow("operand", 1);
+  createRow("carry", 1);
   createRow("operand", 2);
-  createRow("result", 3);
+  createRow("operand", 3);
+  createRow("result", 4);
 
   const aText=String(model.a), bText=String(model.b);
-  for(let i=0;i<aText.length;i++) getCell(1,model.cols-aText.length+i).textContent=aText[i];
-  for(let i=0;i<bText.length;i++) getCell(2,model.cols-bText.length+i).textContent=bText[i];
+  for(let i=0;i<aText.length;i++) getCell(4,model.cols-aText.length+i).textContent=aText[i];
+  for(let i=0;i<bText.length;i++) getCell(4,model.cols-bText.length+i).textContent=bText[i];
 
   const minusCol=model.cols-bText.length-1;
-  if(minusCol>=0) getCell(2,minusCol).classList.add("minus");
+  if(minusCol>=0) getCell(4,minusCol).classList.add("minus");
   updateBoardVisuals();
 }
 
 function renderBorrowAt(col) {
-  const cell=getCell(0,col);
-  if(!cell) return;
-  const top=state.carryTop[col]||"", bottom=state.carryBottom[col]||"";
-  cell.textContent=top&&bottom ? top+"\n"+bottom : (top||bottom||"");
+  const topCell=getCell(0,col);
+  const bottomCell=getCell(1,col);
+  if(!topCell || !bottomCell) return;
+
+  topCell.textContent=state.carryTop[col]||"";
+  bottomCell.textContent=state.carryBottom[col]||"";
 }
 
 function getCell(row, col) {
@@ -612,9 +615,9 @@ function updateBoardVisuals() {
   if (!current) return;
 
   if (current.kind === "borrow-check" || current.kind === "borrow-origin" || current.kind === "sum-input") {
-    getCell(1, current.col)?.classList.add("focus");
-    getCell(2, current.col)?.classList.add("focus");
-    getCell(3, current.col)?.classList.add("focus");
+    getCell(4, current.col)?.classList.add("focus");
+    getCell(4, current.col)?.classList.add("focus");
+    getCell(4, current.col)?.classList.add("focus");
     if (current.borrowOut > 0 || current.kind === "borrow-check") {
       getCell(0, current.col)?.classList.add("focus");
     }
@@ -624,7 +627,7 @@ function updateBoardVisuals() {
   }
 
   for (let col = modelStartCol(); col < state.problem.cols; col += 1) {
-    if (hasCompletedColumn(col)) getCell(3, col)?.classList.add("done");
+    if (hasCompletedColumn(col)) getCell(4, col)?.classList.add("done");
   }
 
   updateColumnGuide();
@@ -878,7 +881,7 @@ function checkInput(){
 
   battlePlaceCorrect();
   playSound("correct", 0.2);
-  getCell(3,step.col).textContent=step.answer;
+  getCell(4,step.col).textContent=step.answer;
   setFeedback("正解。次のくらいへ進もう。","good");
   state.input="";
 
@@ -900,9 +903,9 @@ function markCurrentCellWrong() {
   const cells = [];
 
   if (step.kind === "borrow-check" || step.kind === "borrow-origin" || step.kind === "sum-input") {
-    cells.push(getCell(0, step.col), getCell(1, step.col), getCell(2, step.col), getCell(3, step.col));
+    cells.push(getCell(0, step.col), getCell(4, step.col), getCell(4, step.col), getCell(4, step.col));
     if (step.kind === "sum-input" && step.targetCol >= 0) {
-      cells.push(getCell(0, step.targetCol), getCell(3, step.targetCol));
+      cells.push(getCell(0, step.targetCol), getCell(4, step.targetCol));
     }
   }
 
