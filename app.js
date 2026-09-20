@@ -508,6 +508,7 @@ async function animateBorrow(info) {
 
   const ordered = [...info.changedCols].sort((a,b) => a-b);
   const wait = ms => new Promise(resolve => window.setTimeout(resolve, ms));
+  const lastCol = ordered[ordered.length - 1];
 
   for (const col of ordered) {
     const meta = info.meta[col];
@@ -516,19 +517,30 @@ async function animateBorrow(info) {
     const operandCell = getCell(1, col);
     const carryCell = getCell(0, col);
 
-    // 元の筆算の数字は変えない。上の空いたマスに、くり下げた後の数字を書く。
+    // 元の数字は変えず、上の空いたマスに「くり下がりの書き込み」を残す。
+    // くり下げた元の数字には、手書きと同じようにななめ線を入れる。
+    operandCell?.classList.add("borrow-source", "slashed");
+    carryCell?.classList.add("borrow-step");
+
     if (col === info.fromCol) {
+      // 例：256 → 5の上に4。102 → 1の上に0。
       state.carryTop[col] = String(meta.after);
+      state.carryBottom[col] = "";
       renderBorrowAt(col);
-      operandCell?.classList.add("borrow-source", "slashed");
-      carryCell?.classList.add("borrow-step");
       await wait(260);
-    } else {
-      // 途中の位は、10を受け取ったあと1を渡した結果を上段に残す。
-      state.carryTop[col] = String(meta.after);
+    } else if (col === lastCol) {
+      // 例：6の上に10。2の上にも10。
+      state.carryTop[col] = "10";
+      state.carryBottom[col] = "";
       renderBorrowAt(col);
-      carryCell?.classList.add("borrow-step");
       await wait(220);
+    } else {
+      // 0をまたぐときは「10を受け取る」→「1を渡して9になる」を
+      // 同じ空きマスに上下で残す。例：0の上に10、その上に9。
+      state.carryTop[col] = "10";
+      state.carryBottom[col] = String(meta.after);
+      renderBorrowAt(col);
+      await wait(260);
     }
 
     carryCell?.classList.remove("borrow-step");
