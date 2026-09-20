@@ -1,6 +1,6 @@
 const BADGE_BASE = "https://tt-sensei.github.io/edu-assets/assets/badges/";
 const FANTASY_BASE = "https://tt-sensei.github.io/edu-assets/assets/collections/fantasy/";
-const BADGE_STATE_KEY = "tashizanHissanBadges.v1";
+const BADGE_STATE_KEY = "hikizanHissanBadges.v1";
 
 const MATH_BADGES = [
   ["another-way","別の道","3回やりなおした"],
