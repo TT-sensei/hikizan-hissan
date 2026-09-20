@@ -523,22 +523,25 @@ async function animateBorrow(info) {
     carryCell?.classList.add("borrow-step");
 
     if (col === info.fromCol) {
-      // 例：256 → 5の上に4。102 → 1の上に0。
-      state.carryTop[col] = String(meta.after);
-      state.carryBottom[col] = "";
+      // 元の数字のすぐ上に、くり下げたあとの数字を書く。
+      // 256 → 5のすぐ上に4。102 → 1のすぐ上に0。
+      state.carryTop[col] = "";
+      state.carryBottom[col] = String(meta.after);
       renderBorrowAt(col);
       await wait(260);
     } else if (col === lastCol) {
-      // 例：6の上に10。2の上にも10。
-      state.carryTop[col] = "10";
-      state.carryBottom[col] = "";
+      // 元の数字のすぐ上に10を書く。
+      // 256 → 6のすぐ上に10。102 → 2のすぐ上に10。
+      state.carryTop[col] = "";
+      state.carryBottom[col] = "10";
       renderBorrowAt(col);
       await wait(220);
     } else {
-      // 0をまたぐときは「10を受け取る」→「1を渡して9になる」を
-      // 同じ空きマスに上下で残す。例：0の上に10、その上に9。
-      state.carryTop[col] = "10";
-      state.carryBottom[col] = String(meta.after);
+      // 0をまたぐとき：
+      // 0のすぐ上に10、そのさらに上に9を残す。
+      // 102 → 0の上に10、その上に9。
+      state.carryTop[col] = String(meta.after);
+      state.carryBottom[col] = "10";
       renderBorrowAt(col);
       await wait(260);
     }
