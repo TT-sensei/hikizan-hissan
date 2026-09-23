@@ -302,7 +302,7 @@ button:focus-visible{outline:3px solid #7aa6cf;outline-offset:2px}
 #homeScreen{
   background:
     linear-gradient(rgba(255,255,255,.34),rgba(255,255,255,.50)),
-    url("https://tt-sensei.github.io/navi-character-/assets/web/fantasy/backgrounds/town.webp")
+    url("https://tt-sensei.github.io/navi-character-/assets/web/fantasy/backgrounds/sea.webp")
     center center / cover fixed;
 }
 #battleSetupScreen{
