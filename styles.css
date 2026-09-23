@@ -313,6 +313,7 @@ button:focus-visible{outline:3px solid #7aa6cf;outline-offset:2px}
 }
 #gameScreen{
   background-color:#dfe8ee;
+  background-image:url("https://tt-sensei.github.io/navi-character-/assets/web/fantasy/backgrounds/sea.webp");
   background-position:center center;
   background-size:cover;
   background-attachment:fixed;
