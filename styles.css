@@ -721,3 +721,27 @@ button:focus-visible{outline:3px solid #7aa6cf;outline-offset:2px}
 .cell.operand.borrow-source::after{animation:borrowSlash .42s ease}
 @keyframes borrowStep{0%{transform:scale(.86);opacity:.55;filter:brightness(1.15)}55%{transform:scale(1.16);opacity:1;filter:brightness(1.35)}100%{transform:scale(1);opacity:1;filter:none}}
 @keyframes borrowSlash{0%{transform:translateY(-50%) rotate(25deg) scaleX(0)}60%{transform:translateY(-50%) rotate(25deg) scaleX(1.15)}100%{transform:translateY(-50%) rotate(25deg) scaleX(1)}}
+
+/* バトル画面：筆算を少し大きく、左右の余白を圧縮 */
+@media (min-width:901px){
+  .battle-game-layout{
+    grid-template-columns:120px minmax(340px,1fr) 120px minmax(280px,360px);
+    gap:8px;
+  }
+  .battle-game-layout .work-area{
+    padding-inline:4px;
+  }
+  .battle-game-layout .problem-card{
+    width:min(820px,100%);
+    padding-inline:12px;
+  }
+  .battle-game-layout .board-wrap{
+    transform:scale(.98);
+    transform-origin:center top;
+    margin-bottom:-4px;
+  }
+  .battle-side img{
+    width:112px;
+    height:148px;
+  }
+}
